@@ -41,7 +41,9 @@ For each time step:
 - Skyline in the body's direction: linear interpolation of the 360-value mask.
 - State: `visible` if the whole disc is above (el − r > skyline), `partial` if part of it, else `hidden`.
 - Windows and metrics: disc **centre** above the skyline.
-- Hours = number of steps × step length. Default step: 30 minutes.
+- Rise/set times: between the two steps around each change, positions are recomputed every minute and the
+  first minute with the new state is kept. Hours and longest outages are computed from these times.
+  Default step: 30 minutes.
 
 ## Conventions
 

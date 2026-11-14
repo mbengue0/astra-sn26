@@ -54,7 +54,7 @@ The memory cache is emptied when the server restarts.
 
 ## How it was checked
 
-40 automated tests (`backend/tests/`, run with `python -m pytest -v` from `backend/`):
+42 automated tests (`backend/tests/`, run with `python -m pytest -v` from `backend/`):
 
 - for the 4 catalogue sites, `/analysis` and `/horizon` return **exactly** the files in `contract/examples/`
   (themselves validated against JPL Horizons and NASA illumination maps, see
@@ -81,6 +81,6 @@ Interactive documentation: http://127.0.0.1:8000/docs. For a deployed frontend, 
 ## Not done (next phases)
 
 - **Public deployment of the API** (required for the submission) — the 189 MB terrain file must be on the server.
-- **Set/rise times to the minute**: windows and next sunset / Earthset are accurate to one time step (30 min by default).
+- ~~Set/rise times to the minute~~: done after Phase 3 (see `../scientific/test_results.md`, section 4).
 - Earth horizon check +2 to +6 points vs NASA maps — open question (Pole 1).
 - Pole 3 to confirm the new value `siteId: "custom"` in the contract.

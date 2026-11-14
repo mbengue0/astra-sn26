@@ -12989,34 +12989,34 @@
   "sun": [
    {
     "startUtc": "2026-11-14T00:00:00Z",
-    "endUtc": "2026-11-14T09:30:00Z"
+    "endUtc": "2026-11-14T09:04:00Z"
    },
    {
-    "startUtc": "2026-11-26T07:30:00Z",
-    "endUtc": "2026-12-13T22:00:00Z"
+    "startUtc": "2026-11-26T07:15:00Z",
+    "endUtc": "2026-12-13T21:54:00Z"
    }
   ],
   "earth": [
    {
-    "startUtc": "2026-11-19T20:00:00Z",
-    "endUtc": "2026-11-27T16:30:00Z"
+    "startUtc": "2026-11-19T19:51:00Z",
+    "endUtc": "2026-11-27T16:29:00Z"
    }
   ],
   "both": [
    {
-    "startUtc": "2026-11-26T07:30:00Z",
-    "endUtc": "2026-11-27T16:30:00Z"
+    "startUtc": "2026-11-26T07:15:00Z",
+    "endUtc": "2026-11-27T16:29:00Z"
    }
   ]
  },
  "metrics": {
   "sunElevNowDeg": -0.826,
-  "nextSunsetUtc": "2026-11-14T09:30:00Z",
-  "nextEarthsetUtc": "2026-11-27T16:30:00Z",
-  "sunlitHours": 432.0,
-  "earthVisibleHours": 188.5,
-  "bothHours": 33.0,
-  "longestDarkHours": 286.0,
+  "nextSunsetUtc": "2026-11-14T09:04:00Z",
+  "nextEarthsetUtc": "2026-11-27T16:29:00Z",
+  "sunlitHours": 431.7,
+  "earthVisibleHours": 188.6,
+  "bothHours": 33.2,
+  "longestDarkHours": 286.2,
   "longestEarthOutageHours": 391.5
  },
  "meta": {

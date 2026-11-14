@@ -62,8 +62,13 @@ computed at ground level. Ours: same 18.6 years (step 317 min), sensor at 0 m.
   (e.g. Shackleton rim Sun 84.7 % vs 80.0 %). This is the physical effect of height;
   its exact size on an 80 m DEM is **not verified** (small bumps are smoothed).
 
+## 4. Rise/set times refined to the minute
+
+Refined windows (30-minute step) compared with a full minute-by-minute run, 30 days, 3 sites with
+changes: **identical** windows and metrics; 0.5 s instead of 10 s. Automated test:
+`backend/tests/test_refinement.py` (also with a 13-minute step).
+
 ## Not yet tested
 
 - 20 m and 10 m DEMs.
-- Minute-level refinement of set/rise times.
 - A date-specific check of terrain-aware sunset times against an independent tool.
