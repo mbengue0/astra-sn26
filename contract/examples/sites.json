@@ -11,8 +11,8 @@
   {
    "id": "shackleton_rim_high",
    "name": "Shackleton rim (high point)",
-   "latDeg": -89.779,
-   "lonDeg": -156.34,
+   "latDeg": -89.77967,
+   "lonDeg": -156.35098,
    "group": "pole"
   },
   {
@@ -25,8 +25,8 @@
   {
    "id": "malapert_summit",
    "name": "Malapert summit (4 km away)",
-   "latDeg": -85.987,
-   "lonDeg": 2.06,
+   "latDeg": -85.98763,
+   "lonDeg": 2.0528,
    "group": "pole"
   }
  ]

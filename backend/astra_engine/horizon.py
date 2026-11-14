@@ -10,7 +10,7 @@ Written with AI assistance (Claude); reviewed by the team.
 """
 import numpy as np
 import pyproj
-from rasterio.windows import from_bounds
+from rasterio.windows import Window, from_bounds
 from scipy.ndimage import map_coordinates
 
 from .ephemeris import R_MOON_KM
@@ -44,9 +44,17 @@ def local_axes(ds, lat_deg, lon_deg):
 
 
 def read_window(ds, x0, y0, d_max_m):
-    """Read the square of terrain around the site needed for rays of length d_max_m."""
+    """Read the square of terrain around the site needed for rays of length d_max_m.
+
+    The window is snapped to whole pixels. rasterio reads a fractional window as whole pixels
+    but window_transform keeps the fractional offset, which shifted the terrain by up to half
+    a pixel (40 m on the 80 m map) and changed the ground elevation by metres on slopes
+    (fixed 2026-11-14).
+    """
     pad = d_max_m + 1000
     w = from_bounds(x0 - pad, y0 - pad, x0 + pad, y0 + pad, ds.transform)
+    w = Window(int(np.floor(w.col_off)), int(np.floor(w.row_off)),
+               int(np.ceil(w.width)) + 1, int(np.ceil(w.height)) + 1)
     dem = ds.read(1, window=w, boundless=True, fill_value=np.nan)
     return dem, ds.window_transform(w)
 
@@ -95,3 +103,24 @@ def site_horizon(ds, lat_deg, lon_deg, sensor_m=2.0, d_max_m=150_000.0, az_step=
     az, mask, dist = horizon_from_grid(dem, T, x0, y0, north, east, ground + sensor_m,
                                        az_step=az_step, d_max_m=d_max_m)
     return {"ground_m": ground, "az": az, "mask": mask, "dist": dist}
+
+
+def coverage(ds, lat_deg, lon_deg, d_max_m=150_000.0):
+    """Does the terrain file cover this site well enough for a terrain horizon?
+
+    The horizon rays are straight lines in the map plane, so they all stay inside the
+    (rectangular) map exactly when the circle of radius d_max_m around the site does.
+    Outside the map the elevation is unknown and the ray samples are ignored, which would
+    make the horizon too low in those directions without any warning.
+
+    Returns dict(onMap, edgeDistanceKm, requiredKm, complete).
+    """
+    x0, y0, _, _ = local_axes(ds, lat_deg, lon_deg)
+    b = ds.bounds
+    edge_m = min(x0 - b.left, b.right - x0, y0 - b.bottom, b.top - y0)
+    on_map = edge_m > 0
+    if on_map:
+        dem, T = read_window(ds, x0, y0, 1000.0)
+        on_map = bool(np.isfinite(elevation_at(dem, T, x0, y0)))
+    return {"onMap": on_map, "edgeDistanceKm": round(edge_m / 1000.0, 1),
+            "requiredKm": d_max_m / 1000.0, "complete": on_map and edge_m >= d_max_m}

@@ -19,17 +19,17 @@
   "site": "shackleton_rim_high",
   "body": "sun",
   "n": 120,
-  "meanDElArcsec": -2.4,
-  "maxAbsDElArcsec": 6.8,
-  "maxSepArcsec": 15.2
+  "meanDElArcsec": -2.3,
+  "maxAbsDElArcsec": 6.4,
+  "maxSepArcsec": 15.1
  },
  {
   "site": "shackleton_rim_high",
   "body": "earth",
   "n": 120,
-  "meanDElArcsec": 0.5,
-  "maxAbsDElArcsec": 6.4,
-  "maxSepArcsec": 12.7
+  "meanDElArcsec": 0.4,
+  "maxAbsDElArcsec": 6.7,
+  "maxSepArcsec": 12.6
  },
  {
   "site": "malapert",
@@ -51,16 +51,16 @@
   "site": "malapert_summit",
   "body": "sun",
   "n": 120,
-  "meanDElArcsec": -2.5,
-  "maxAbsDElArcsec": 6.0,
-  "maxSepArcsec": 14.9
+  "meanDElArcsec": -2.4,
+  "maxAbsDElArcsec": 6.1,
+  "maxSepArcsec": 15.3
  },
  {
   "site": "malapert_summit",
   "body": "earth",
   "n": 120,
-  "meanDElArcsec": 0.4,
-  "maxAbsDElArcsec": 6.4,
-  "maxSepArcsec": 12.7
+  "meanDElArcsec": 0.5,
+  "maxAbsDElArcsec": 6.8,
+  "maxSepArcsec": 12.5
  }
 ]

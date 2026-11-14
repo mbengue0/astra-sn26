@@ -10,7 +10,7 @@
  {
   "site": "shackleton_rim_high",
   "sensorHeightM": 0.0,
-  "sun_ours": 0.7888098578344638,
+  "sun_ours": 0.7886487802756054,
   "sun_pub": 0.8002400000000001,
   "earth_ours": 0.5517174335709657,
   "earth_pub": 0.49100000000000005
@@ -18,17 +18,17 @@
  {
   "site": "malapert",
   "sensorHeightM": 0.0,
-  "sun_ours": 0.3274963237513057,
+  "sun_ours": 0.31361992439162767,
   "sun_pub": 0.33376,
-  "earth_ours": 0.2664938431626701,
+  "earth_ours": 0.25534672715489304,
   "earth_pub": 0.22608000000000003
  },
  {
   "site": "malapert_summit",
   "sensorHeightM": 0.0,
-  "sun_ours": 0.5757868339648194,
+  "sun_ours": 0.5756109693866507,
   "sun_pub": 0.5556800000000001,
-  "earth_ours": 0.89650032404407,
+  "earth_ours": 0.8964679196370706,
   "earth_pub": 0.8748400000000001
  }
 ]

@@ -1,10 +1,10 @@
 {
  "schemaVersion": 1,
- "note": "Test sites. Coordinates of the *_rim_high and *_summit points were picked from the LOLA 80 m map; they are NOT official site coordinates.",
+ "note": "Test sites. Coordinates of the *_rim_high and *_summit points are the highest pixel of the LOLA 80 m map near each feature (re-picked 2026-11-14 after a terrain-reading fix); they are NOT official site coordinates.",
  "sites": [
   {"id": "shackleton_coords_proto", "name": "Shackleton (prototype coordinates, crater floor)", "latDeg": -89.7, "lonDeg": 129.8, "group": "pole"},
-  {"id": "shackleton_rim_high", "name": "Shackleton rim (high point)", "latDeg": -89.779, "lonDeg": -156.34, "group": "pole"},
+  {"id": "shackleton_rim_high", "name": "Shackleton rim (high point)", "latDeg": -89.77967, "lonDeg": -156.35098, "group": "pole"},
   {"id": "malapert", "name": "Malapert (prototype coordinates, slope)", "latDeg": -86.0, "lonDeg": 0.1, "group": "pole"},
-  {"id": "malapert_summit", "name": "Malapert summit (4 km away)", "latDeg": -85.987, "lonDeg": 2.06, "group": "pole"}
+  {"id": "malapert_summit", "name": "Malapert summit (4 km away)", "latDeg": -85.98763, "lonDeg": 2.0528, "group": "pole"}
  ]
 }
