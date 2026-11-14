@@ -8,13 +8,16 @@ Then open http://127.0.0.1:8000/docs (interactive documentation).
 import datetime as dt
 import json
 import os
+from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
+import rasterio
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from astra_engine.analysis import analyse_site
+from astra_engine.horizon import site_horizon
 
 ROOT = Path(__file__).resolve().parents[2]
 SITES_FILE = ROOT / "data" / "sites" / "sites.json"
@@ -36,6 +39,19 @@ def ldem_path():
         raise HTTPException(503, "Terrain data not configured on the server: set ASTRA_LDEM_PATH "
                                  "to a LOLA LDEM GeoTIFF (see data/README.md).")
     return path
+
+
+@lru_cache(maxsize=256)
+def _cached_horizon(lat_deg, lon_deg, path, file_mtime, sensor_m):
+    # Terrain does not move: the horizon depends only on the point, the terrain file and the
+    # sensor height, never on the date. file_mtime is part of the key so a replaced file is recomputed.
+    with rasterio.open(path) as ds:
+        return site_horizon(ds, lat_deg, lon_deg, sensor_m=sensor_m)
+
+
+def get_horizon(lat_deg, lon_deg, path, sensor_m):
+    hz = _cached_horizon(lat_deg, lon_deg, path, os.path.getmtime(path), sensor_m)
+    return dict(hz)  # shallow copy: analyse_site adds keys to the dict it receives
 
 
 class AnalysisRequest(BaseModel):
@@ -78,6 +94,8 @@ def post_analysis(req: AnalysisRequest):
     site = next((s for s in load_sites()["sites"] if s["id"] == req.siteId), None)
     if site is None:
         raise HTTPException(404, f"Unknown siteId '{req.siteId}'. See GET /sites.")
-    res_terrain, res_flat, _ = analyse_site(site, ldem_path(), req.start, req.days, req.stepMinutes,
-                                            sensor_m=req.sensorHeightM)
+    path = ldem_path()
+    horizon = get_horizon(site["latDeg"], site["lonDeg"], path, req.sensorHeightM)
+    res_terrain, res_flat, _ = analyse_site(site, path, req.start, req.days, req.stepMinutes,
+                                            sensor_m=req.sensorHeightM, horizon=horizon)
     return res_terrain if req.horizon == "terrain" else res_flat
