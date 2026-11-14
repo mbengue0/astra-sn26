@@ -30,7 +30,7 @@ A 4-site, 30-day run on the 80 m map takes about 10 seconds.
 ASTRA_LDEM_PATH=<path/to/LDEM_80S_80MPP_ADJ.tiff> python -m pytest -v
 ```
 
-45 tests (under a minute): `/analysis` and `/horizon` return exactly `contract/examples/`, custom
+51 tests (under a minute): `/analysis` and `/horizon` return exactly `contract/examples/`, custom
 coordinates, cache, terrain coverage rule (checked against real missing pixels), invalid requests, CORS.
 Without `ASTRA_LDEM_PATH`, the terrain tests are skipped. Summary of the API work: `../docs/project/phase3_pole2.md`.
 
@@ -41,6 +41,7 @@ Without `ASTRA_LDEM_PATH`, the terrain tests are skipped. Summary of the API wor
 - [x] `POST /analysis` with custom `latDeg`/`lonDeg` (result `siteId` = `"custom"`)
 - [x] Cache horizon masks in memory per (lat, lon, LDEM file, sensor height) — repeat request ~0.7 s instead of ~2.3 s
 - [x] `GET /horizon` (skyline, `horizon_<siteId>.json` format) and CORS for the local frontend (`ASTRA_CORS_ORIGINS`)
+- [x] Precomputed year for every catalogue site (`scripts/precompute.py` → `../contract/precomputed/`, `slice_result`)
 - [ ] Deploy the API publicly (terrain file on the server)
 - [x] Refine set/rise times to the minute around transitions (`tests/test_refinement.py`)
 - [x] Data-coverage check (`horizon.coverage`): outside the map → 422; terrain horizon only if the whole 150 km ray disc is inside the map (80 m map: about 85° S or closer to the pole, depending on longitude), otherwise 422 suggesting `horizon="flat"`

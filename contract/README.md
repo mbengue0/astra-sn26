@@ -60,3 +60,29 @@ step ends at the end of the period (start + days). A window shorter than one ste
 
 **Wording for the UI:** "Sun visible" is not "power available" and "Earth visible" is not
 "radio link available" — show them as geometric visibility only.
+
+## `precomputed/` — one year for every catalogue site (no server needed)
+
+Real engine outputs for **all sites of `data/sites/sites.json`**, from 2026-11-14 00:00 UTC for 365 days,
+30-minute step, 2 m sensor, terrain horizon, rise/set times refined to the minute.
+Generated with `backend/scripts/precompute.py`. About 1.4 MB per site (about 0.3 MB when served gzipped).
+
+| File | Content |
+|---|---|
+| `index.json` | `startUtc`, `endUtc`, `stepMinutes`, `sensorHeightM`, `terrainSource`, `sites` (same list as `sites.json`) |
+| `result_<siteId>.json` | same format as `result_<siteId>.json` above, for the whole year |
+| `horizon_<siteId>.json` | same format as `horizon_<siteId>.json` above |
+
+**Showing a shorter period** (the user picks a start date and a duration inside the year) — cut it out of
+the year file; this gives exactly the result of a direct analysis of that period (tested):
+
+1. Snap `start` and `end` to the 30-minute grid (`startUtc` + k × 30 min); `end` = `start` + duration.
+2. `times`, `sun.*`, `earth.*`: keep the indices with `start ≤ times[i] < end`.
+3. `windows.sun / earth / both`: clip each window to [`start`, `end`]; drop the empty ones.
+4. `sunlitHours`, `earthVisibleHours`, `bothHours`: sum of the clipped window durations.
+5. `longestDarkHours` / `longestEarthOutageHours`: longest gap inside [`start`, `end`] not covered by the clipped Sun / Earth windows.
+6. `nextSunsetUtc` / `nextEarthsetUtc`: the first **unclipped** window `endUtc` with `start < endUtc ≤` (last kept time); else `null`.
+7. `sunElevNowDeg`: `sun.elevDeg` at the first kept index.
+
+Reference implementation: `slice_result` in `backend/astra_engine/visibility.py`.
+For another sensor height, another year or custom coordinates, call the API (`POST /analysis`).

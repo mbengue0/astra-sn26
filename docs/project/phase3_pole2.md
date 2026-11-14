@@ -55,7 +55,7 @@ The memory cache is emptied when the server restarts.
 
 ## How it was checked
 
-45 automated tests (`backend/tests/`, run with `python -m pytest -v` from `backend/`):
+51 automated tests (`backend/tests/`, run with `python -m pytest -v` from `backend/`):
 
 - for the 4 catalogue sites, `/analysis` and `/horizon` return **exactly** the files in `contract/examples/`
   (themselves validated against JPL Horizons and NASA illumination maps, see

@@ -145,3 +145,50 @@ def build_result(site, times, o, mask_az, mask_el, horizon_kind, step_min, fine=
                  "terrainSource": "NASA LOLA LDEM (PGDA)" if horizon_kind == "terrain" else None,
                  "generatedBy": "ASTRA-SN engine, written with AI assistance (Claude)"},
     }
+
+
+def _clip(win, start, end):
+    out = []
+    for w in win:
+        s, e = max(w["startUtc"], start), min(w["endUtc"], end)
+        if s < e:
+            out.append({"startUtc": s, "endUtc": e})
+    return out
+
+
+def slice_result(res, start_utc, end_utc):
+    """Cut a shorter period [start_utc, end_utc) out of a longer result (e.g. a precomputed year).
+
+    start_utc and end_utc must fall on the time grid of `res` (times[0] + k * stepMinutes).
+    The answer equals a direct analysis of that period (tests/test_precompute.py).
+    This is the reference algorithm for the frontend.
+    """
+    times = res["times"]
+    step = dt.timedelta(minutes=res["stepMinutes"])
+    if (_dt(start_utc) - _dt(times[0])) % step or (_dt(end_utc) - _dt(times[0])) % step:
+        raise ValueError("start and end must fall on the time grid of the result")
+    if not times[0] <= start_utc < end_utc <= _iso(_dt(times[-1]) + step):
+        raise ValueError("period outside the result")
+    i0, i1 = times.index(start_utc), (times.index(end_utc) if end_utc in times else len(times))
+    last = times[i1 - 1]
+    cut = lambda a: a[i0:i1]
+    body = lambda b: {k: cut(v) for k, v in res[b].items()}
+    win = {k: _clip(v, start_utc, end_utc) for k, v in res["windows"].items()}
+
+    def next_set(name):
+        # a set inside the period: an original window ending after the first step and at or before the last one
+        return next((w["endUtc"] for w in res["windows"][name] if start_utc < w["endUtc"] <= last), None)
+
+    out = dict(res)
+    out.update({
+        "times": cut(times), "sun": body("sun"), "earth": body("earth"), "windows": win,
+        "metrics": {"sunElevNowDeg": res["sun"]["elevDeg"][i0],
+                    "nextSunsetUtc": next_set("sun"),
+                    "nextEarthsetUtc": next_set("earth"),
+                    "sunlitHours": round(total_hours(win["sun"]), 1),
+                    "earthVisibleHours": round(total_hours(win["earth"]), 1),
+                    "bothHours": round(total_hours(win["both"]), 1),
+                    "longestDarkHours": round(longest_gap_hours(win["sun"], start_utc, end_utc), 1),
+                    "longestEarthOutageHours": round(longest_gap_hours(win["earth"], start_utc, end_utc), 1)},
+    })
+    return out
