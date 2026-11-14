@@ -95,3 +95,24 @@ def site_horizon(ds, lat_deg, lon_deg, sensor_m=2.0, d_max_m=150_000.0, az_step=
     az, mask, dist = horizon_from_grid(dem, T, x0, y0, north, east, ground + sensor_m,
                                        az_step=az_step, d_max_m=d_max_m)
     return {"ground_m": ground, "az": az, "mask": mask, "dist": dist}
+
+
+def coverage(ds, lat_deg, lon_deg, d_max_m=150_000.0):
+    """Does the terrain file cover this site well enough for a terrain horizon?
+
+    The horizon rays are straight lines in the map plane, so they all stay inside the
+    (rectangular) map exactly when the circle of radius d_max_m around the site does.
+    Outside the map the elevation is unknown and the ray samples are ignored, which would
+    make the horizon too low in those directions without any warning.
+
+    Returns dict(onMap, edgeDistanceKm, requiredKm, complete).
+    """
+    x0, y0, _, _ = local_axes(ds, lat_deg, lon_deg)
+    b = ds.bounds
+    edge_m = min(x0 - b.left, b.right - x0, y0 - b.bottom, b.top - y0)
+    on_map = edge_m > 0
+    if on_map:
+        dem, T = read_window(ds, x0, y0, 1000.0)
+        on_map = bool(np.isfinite(elevation_at(dem, T, x0, y0)))
+    return {"onMap": on_map, "edgeDistanceKm": round(edge_m / 1000.0, 1),
+            "requiredKm": d_max_m / 1000.0, "complete": on_map and edge_m >= d_max_m}
