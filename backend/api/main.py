@@ -13,10 +13,11 @@ from pathlib import Path
 from typing import Literal, Optional
 
 import rasterio
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from astra_engine.analysis import analyse_site
+from astra_engine.analysis import analyse_site, horizon_json
 from astra_engine.horizon import coverage, site_horizon
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -24,7 +25,14 @@ SITES_FILE = ROOT / "data" / "sites" / "sites.json"
 TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 MAX_STEPS = 20_000  # e.g. 60 days at a 5-minute step; keeps one request under a few seconds
 
+# Web pages allowed to call the API from a browser (CORS). Default: local frontend dev servers
+# (Vite 5173, 3000). For a deployed frontend, set ASTRA_CORS_ORIGINS="https://site-a,https://site-b".
+DEFAULT_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000"
+CORS_ORIGINS = [o.strip() for o in os.environ.get("ASTRA_CORS_ORIGINS", DEFAULT_ORIGINS).split(",") if o.strip()]
+
 app = FastAPI(title="ASTRA-SN API", version="0.1.0")
+app.add_middleware(CORSMiddleware, allow_origins=CORS_ORIGINS, allow_methods=["GET", "POST"],
+                   allow_headers=["Content-Type"])
 
 
 def load_sites():
@@ -118,21 +126,42 @@ class AnalysisRequest(BaseModel):
         return self
 
 
+def resolve_site(site_id, lat_deg, lon_deg):
+    """Catalogue site by id, or a custom site (id "custom") from coordinates."""
+    if site_id is not None:
+        site = next((s for s in load_sites()["sites"] if s["id"] == site_id), None)
+        if site is None:
+            raise HTTPException(404, f"Unknown siteId '{site_id}'. See GET /sites.")
+        return site
+    return {"id": "custom", "name": "Custom coordinates", "latDeg": lat_deg, "lonDeg": lon_deg}
+
+
 @app.get("/sites")
 def get_sites():
     """Catalogue of candidate sites, in the contract format (contract/README.md, sites.json)."""
     return load_sites()
 
 
+@app.get("/horizon")
+def get_horizon_profile(siteId: Optional[str] = Query(None, examples=["malapert"]),
+                        latDeg: Optional[float] = Query(None, ge=-90, le=90),
+                        lonDeg: Optional[float] = Query(None, ge=-180, le=180),
+                        sensorHeightM: float = Query(2.0, ge=0, le=100)):
+    """Terrain skyline of a site (horizon_<siteId>.json format): elevation for each azimuth 0..359."""
+    custom = latDeg is not None or lonDeg is not None
+    if (siteId is not None) == custom or (custom and (latDeg is None or lonDeg is None)):
+        raise HTTPException(422, "give siteId, or both latDeg and lonDeg (not both)")
+    site = resolve_site(siteId, latDeg, lonDeg)
+    path = ldem_path()
+    check_coverage(site, path, "terrain")
+    hz = get_horizon(site["latDeg"], site["lonDeg"], path, sensorHeightM)
+    return horizon_json(site, hz, sensorHeightM, f"NASA PGDA LOLA {Path(path).stem} (Barker et al. 2023)")
+
+
 @app.post("/analysis")
 def post_analysis(req: AnalysisRequest):
     """Full Sun/Earth visibility analysis (result_<siteId>.json format; siteId "custom" for coordinates)."""
-    if req.siteId is not None:
-        site = next((s for s in load_sites()["sites"] if s["id"] == req.siteId), None)
-        if site is None:
-            raise HTTPException(404, f"Unknown siteId '{req.siteId}'. See GET /sites.")
-    else:
-        site = {"id": "custom", "name": "Custom coordinates", "latDeg": req.latDeg, "lonDeg": req.lonDeg}
+    site = resolve_site(req.siteId, req.latDeg, req.lonDeg)
     path = ldem_path()
     check_coverage(site, path, req.horizon)
     horizon = get_horizon(site["latDeg"], site["lonDeg"], path, req.sensorHeightM)

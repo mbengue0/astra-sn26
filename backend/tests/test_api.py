@@ -100,3 +100,54 @@ def test_missing_terrain_file_gives_a_clear_error(client, monkeypatch):
     r = client.post("/analysis", json={"siteId": "malapert", "start": START})
     assert r.status_code == 503
     assert "ASTRA_LDEM_PATH" in r.json()["detail"]
+
+
+# ---------- GET /horizon ----------
+
+@needs_ldem
+@pytest.mark.parametrize("site_id", CATALOGUE_IDS)
+def test_horizon_matches_contract_example(client, site_id):
+    r = client.get("/horizon", params={"siteId": site_id})
+    assert r.status_code == 200
+    assert r.json() == contract_example(f"horizon_{site_id}.json")
+
+
+@needs_ldem
+def test_horizon_for_custom_coordinates(client):
+    r = client.get("/horizon", params={"latDeg": -86.0, "lonDeg": 0.1})
+    ref = contract_example("horizon_malapert.json")
+    assert r.status_code == 200
+    assert r.json()["siteId"] == "custom"
+    assert r.json()["elevDeg"] == ref["elevDeg"]
+
+
+@needs_ldem
+def test_horizon_refused_when_terrain_is_incomplete(client):
+    r = client.get("/horizon", params={"latDeg": -84.0, "lonDeg": 0.0})
+    assert r.status_code == 422
+
+
+@pytest.mark.parametrize("params, status", [
+    ({}, 422),                                             # nothing
+    ({"siteId": "malapert", "latDeg": -86, "lonDeg": 0}, 422),  # both
+    ({"latDeg": -86}, 422),                                # latitude only
+    ({"siteId": "tycho"}, 404),                            # unknown site
+])
+def test_horizon_invalid_request(client, params, status):
+    assert client.get("/horizon", params=params).status_code == status
+
+
+# ---------- CORS: the frontend in a browser may call the API ----------
+
+def test_cors_allows_the_local_frontend(client):
+    origin = "http://localhost:5173"
+    r = client.options("/analysis", headers={"Origin": origin, "Access-Control-Request-Method": "POST",
+                                             "Access-Control-Request-Headers": "Content-Type"})
+    assert r.status_code == 200
+    assert r.headers["access-control-allow-origin"] == origin
+    assert client.get("/sites", headers={"Origin": origin}).headers["access-control-allow-origin"] == origin
+
+
+def test_cors_refuses_an_unknown_website(client):
+    r = client.get("/sites", headers={"Origin": "https://unknown.example"})
+    assert "access-control-allow-origin" not in r.headers
