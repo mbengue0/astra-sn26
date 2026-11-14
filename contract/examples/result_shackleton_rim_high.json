@@ -12989,18 +12989,18 @@
   "sun": [
    {
     "startUtc": "2026-11-14T00:00:00Z",
-    "endUtc": "2026-12-13T23:30:00Z"
+    "endUtc": "2026-12-14T00:00:00Z"
    }
   ],
   "earth": [
    {
-    "startUtc": "2026-11-16T23:00:00Z",
+    "startUtc": "2026-11-16T22:53:00Z",
     "endUtc": "2026-11-30T10:30:00Z"
    }
   ],
   "both": [
    {
-    "startUtc": "2026-11-16T23:00:00Z",
+    "startUtc": "2026-11-16T22:53:00Z",
     "endUtc": "2026-11-30T10:30:00Z"
    }
   ]
@@ -13010,8 +13010,8 @@
   "nextSunsetUtc": null,
   "nextEarthsetUtc": "2026-11-30T10:30:00Z",
   "sunlitHours": 720.0,
-  "earthVisibleHours": 323.5,
-  "bothHours": 323.5,
+  "earthVisibleHours": 323.6,
+  "bothHours": 323.6,
   "longestDarkHours": 0.0,
   "longestEarthOutageHours": 325.5
  },

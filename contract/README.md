@@ -54,7 +54,9 @@ longitude east, −180..180.
 | `meta` | object | engine and data provenance |
 
 Rules: `state` uses the whole disc; `windows` and `metrics` use the disc **centre**.
-Times in `windows` are accurate to one step (30 min); minute refinement is planned.
+Times in `windows` and `nextSunsetUtc` / `nextEarthsetUtc` are refined to the minute (the first minute with
+the new state); hours and longest outages are computed from these times. A window still open at the last
+step ends at the end of the period (start + days). A window shorter than one step can still be missed.
 
 **Wording for the UI:** "Sun visible" is not "power available" and "Earth visible" is not
 "radio link available" — show them as geometric visibility only.

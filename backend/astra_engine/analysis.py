@@ -30,11 +30,21 @@ def analyse_site(site, ldem_path, start_utc, days=30, step_min=30, sensor_m=2.0,
     if horizon is None:
         with rasterio.open(ldem_path) as ds:
             horizon = site_horizon(ds, site["latDeg"], site["lonDeg"], sensor_m=sensor_m, d_max_m=d_max_m)
-    _, o = sun_earth_series(site["latDeg"], site["lonDeg"], start_utc, days, step_min,
-                            site_height_km=horizon["ground_m"] / 1000.0)
+    height_km = horizon["ground_m"] / 1000.0
+    _, o = sun_earth_series(site["latDeg"], site["lonDeg"], start_utc, days, step_min, site_height_km=height_km)
     times = iso_times(start_utc, days, step_min)
-    res_t = build_result(site, times, o, horizon["az"], horizon["mask"], "terrain", step_min)
-    res_f = build_result(site, times, o, horizon["az"], np.zeros_like(horizon["mask"]), "flat", step_min)
+    fine_cache = {}
+
+    def fine(i):
+        """Sun/Earth positions every minute between times[i-1] and times[i] (computed only around changes)."""
+        if i not in fine_cache:
+            # (step_min + 0.5) minutes -> exactly step_min samples despite float rounding
+            fine_cache[i] = sun_earth_series(site["latDeg"], site["lonDeg"], times[i - 1], (step_min + 0.5) / 1440.0,
+                                             1, site_height_km=height_km)[1]
+        return fine_cache[i]
+
+    res_t = build_result(site, times, o, horizon["az"], horizon["mask"], "terrain", step_min, fine)
+    res_f = build_result(site, times, o, horizon["az"], np.zeros_like(horizon["mask"]), "flat", step_min, fine)
     horizon["series"] = o
     return res_t, res_f, horizon
 

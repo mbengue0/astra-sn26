@@ -33,6 +33,13 @@ def test_custom_coordinates_give_the_same_result_as_the_catalogue_site(client):
 
 
 @needs_ldem
+def test_one_year_analysis_is_allowed(client):
+    r = client.post("/analysis", json={"siteId": "malapert", "start": START, "days": 366, "stepMinutes": 120})
+    assert r.status_code == 200
+    assert r.json()["windows"]["sun"][-1]["endUtc"] <= "2027-11-15T00:00:00Z"
+
+
+@needs_ldem
 def test_flat_horizon_option(client):
     r = client.post("/analysis", json={"siteId": "malapert", "start": START, "horizon": "flat"})
     assert r.status_code == 200
@@ -84,6 +91,7 @@ def test_square_map_limit_depends_on_longitude(client):
     ({"siteId": "tycho", "start": START}, 404),                      # unknown site
     ({"siteId": "malapert", "start": "14/11/2026"}, 422),            # wrong date format
     ({"siteId": "malapert", "start": START, "days": -5}, 422),       # negative period
+    ({"siteId": "malapert", "start": START, "days": 367}, 422),      # more than one year
     ({"siteId": "malapert", "start": START, "days": 90, "stepMinutes": 1}, 422),  # too many steps
     ({"siteId": "malapert", "start": START, "horizon": "round"}, 422),            # unknown horizon kind
     ({"siteId": "malapert", "latDeg": -86, "lonDeg": 0, "start": START}, 422),    # both site and coords

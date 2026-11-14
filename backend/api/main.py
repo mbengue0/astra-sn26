@@ -93,7 +93,7 @@ class AnalysisRequest(BaseModel):
     latDeg: Optional[float] = Field(None, ge=-90, le=90, examples=[-86.0])
     lonDeg: Optional[float] = Field(None, ge=-180, le=180, examples=[0.1])
     start: str = Field(examples=["2026-11-14T00:00:00Z"], description="UTC, format YYYY-MM-DDTHH:MM:SSZ")
-    days: float = Field(30, gt=0, le=90, description="analysis period length in days")
+    days: float = Field(30, gt=0, le=366, description="analysis period length in days (up to 1 year)")
     stepMinutes: int = Field(30, ge=1, le=1440, description="time step in minutes")
     sensorHeightM: float = Field(2.0, ge=0, le=100, description="observer height above ground (m)")
     horizon: Literal["terrain", "flat"] = "terrain"
