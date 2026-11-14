@@ -10,7 +10,7 @@ Written with AI assistance (Claude); reviewed by the team.
 """
 import numpy as np
 import pyproj
-from rasterio.windows import from_bounds
+from rasterio.windows import Window, from_bounds
 from scipy.ndimage import map_coordinates
 
 from .ephemeris import R_MOON_KM
@@ -44,9 +44,17 @@ def local_axes(ds, lat_deg, lon_deg):
 
 
 def read_window(ds, x0, y0, d_max_m):
-    """Read the square of terrain around the site needed for rays of length d_max_m."""
+    """Read the square of terrain around the site needed for rays of length d_max_m.
+
+    The window is snapped to whole pixels. rasterio reads a fractional window as whole pixels
+    but window_transform keeps the fractional offset, which shifted the terrain by up to half
+    a pixel (40 m on the 80 m map) and changed the ground elevation by metres on slopes
+    (fixed 2026-11-14).
+    """
     pad = d_max_m + 1000
     w = from_bounds(x0 - pad, y0 - pad, x0 + pad, y0 + pad, ds.transform)
+    w = Window(int(np.floor(w.col_off)), int(np.floor(w.row_off)),
+               int(np.ceil(w.width)) + 1, int(np.ceil(w.height)) + 1)
     dem = ds.read(1, window=w, boundless=True, fill_value=np.nan)
     return dem, ds.window_transform(w)
 

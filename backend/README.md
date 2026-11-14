@@ -30,7 +30,7 @@ A 4-site, 30-day run on the 80 m map takes about 10 seconds.
 ASTRA_LDEM_PATH=<path/to/LDEM_80S_80MPP_ADJ.tiff> python -m pytest -v
 ```
 
-38 tests (under a minute): `/analysis` and `/horizon` return exactly `contract/examples/`, custom
+40 tests (under a minute): `/analysis` and `/horizon` return exactly `contract/examples/`, custom
 coordinates, cache, terrain coverage rule (checked against real missing pixels), invalid requests, CORS.
 Without `ASTRA_LDEM_PATH`, the terrain tests are skipped. Summary of the API work: `../docs/project/phase3_pole2.md`.
 
