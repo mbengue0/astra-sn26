@@ -23,6 +23,17 @@ python scripts/plots.py <LDEM.tif> ../outputs
 Sites are read from [`../data/sites/sites.json`](../data/sites/sites.json).
 A 4-site, 30-day run on the 80 m map takes about 10 seconds.
 
+## Tests
+
+```bash
+# from backend/ — terrain tests need the 80 m LOLA file used for contract/examples/
+ASTRA_LDEM_PATH=<path/to/LDEM_80S_80MPP_ADJ.tiff> python -m pytest -v
+```
+
+26 tests (about 30 s): the API returns exactly `contract/examples/`, custom coordinates,
+cache, terrain coverage rule (checked against real missing pixels), invalid requests.
+Without `ASTRA_LDEM_PATH`, the 15 terrain tests are skipped and 11 run.
+
 ## Next steps (Pole 2)
 
 - [x] FastAPI `GET /sites` (`api/main.py`; run from backend/: `uvicorn api.main:app --reload`)
