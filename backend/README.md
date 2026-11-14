@@ -23,6 +23,20 @@ python scripts/plots.py <LDEM.tif> ../outputs
 Sites are read from [`../data/sites/sites.json`](../data/sites/sites.json).
 A 4-site, 30-day run on the 80 m map takes about 10 seconds.
 
+## Run the API with Docker
+
+From the repository root (the 80 m LOLA file is downloaded from NASA PGDA during the build, ~190 MB):
+
+```bash
+docker build -t astra-sn-api .
+docker run -p 8080:8080 astra-sn-api        # http://localhost:8080/docs
+```
+
+Checked on 2026-11-14: inside the container, `/analysis` and `/horizon` return exactly `contract/examples/`;
+a 30-day analysis takes ~1.2 s and a one-year analysis ~5 s. Set `ASTRA_CORS_ORIGINS` (`docker run -e ...`)
+for a deployed frontend. No free host without a credit card was found for it yet; the public frontend can use
+`contract/precomputed/` instead.
+
 ## Tests
 
 ```bash
