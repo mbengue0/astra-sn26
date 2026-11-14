@@ -41,7 +41,8 @@ computed at ground level. Ours: same 18.6 years (step 317 min), sensor at 0 m.
 
 - **Sun: validated within ±2 points.**
 - **Earth: +2 to +6 points too optimistic — cause not found yet.** Hypotheses (unverified):
-  NASA used an older DEM (2016) than ours (2023); published pixels average 60 m; Earth disc handling.
+  NASA used an older DEM (2016) than ours (2023); published pixels average 60 m.
+  Ruled out: Earth positions and the disc rule (see `limitations.md`, open issue).
 
 ## 3. Fixes and sensitivity
 
