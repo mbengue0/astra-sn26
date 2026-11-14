@@ -1,0 +1,8 @@
+# What the deployed API needs (no plotting). Same versions as requirements.txt.
+astronomy-engine==2.1.19
+numpy==2.0.2
+scipy==1.13.1
+rasterio==1.4.3
+pyproj==3.6.1
+fastapi==0.128.8
+uvicorn==0.39.0
