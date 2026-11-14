@@ -49,12 +49,13 @@ The terrain horizon does not depend on the date, so it is computed once per site
 | First request for a site | ~2.3 s |
 | Same site again, any date | ~0.7 s |
 | Heaviest allowed request (60 days, 5-minute step) | ~8 s |
+| One year (366 days, 30-minute step, the maximum period) | ~6 s, 1.4 MB answer |
 
 The memory cache is emptied when the server restarts.
 
 ## How it was checked
 
-42 automated tests (`backend/tests/`, run with `python -m pytest -v` from `backend/`):
+44 automated tests (`backend/tests/`, run with `python -m pytest -v` from `backend/`):
 
 - for the 4 catalogue sites, `/analysis` and `/horizon` return **exactly** the files in `contract/examples/`
   (themselves validated against JPL Horizons and NASA illumination maps, see
