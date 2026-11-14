@@ -26,7 +26,8 @@ A 4-site, 30-day run on the 80 m map takes about 10 seconds.
 ## Next steps (Pole 2)
 
 - [x] FastAPI `GET /sites` (`api/main.py`; run from backend/: `uvicorn api.main:app --reload`)
-- [ ] FastAPI `POST /analysis` (site or custom lat/lon, start, duration, step) → contract JSON
+- [x] FastAPI `POST /analysis` for catalogue sites → contract JSON (needs `ASTRA_LDEM_PATH`; identical to `contract/examples/` for the 4 sites)
+- [ ] `POST /analysis` with custom lat/lon
 - [ ] Cache horizon masks per (site, LDEM file, sensor height)
 - [ ] Refine set/rise times to the minute around transitions
 - [ ] Data-coverage check for custom coordinates (outside the LDEM → clear error)
