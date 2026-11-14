@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Large terrain / raster data: never commit (see data/README.md)
+*.tif
+*.tiff
+*.TIF
+*.TIFF
+*.crdownload
+data/raw/
+data/terrain/
+
+# Local run outputs (copy what you want to keep into contract/examples or docs/figures)
+outputs*/
+*.npz
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env

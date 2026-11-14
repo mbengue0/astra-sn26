@@ -1,0 +1,66 @@
+[
+ {
+  "site": "shackleton_coords_proto",
+  "body": "sun",
+  "n": 120,
+  "meanDElArcsec": -2.4,
+  "maxAbsDElArcsec": 6.5,
+  "maxSepArcsec": 15.5
+ },
+ {
+  "site": "shackleton_coords_proto",
+  "body": "earth",
+  "n": 120,
+  "meanDElArcsec": 0.3,
+  "maxAbsDElArcsec": 7.1,
+  "maxSepArcsec": 12.4
+ },
+ {
+  "site": "shackleton_rim_high",
+  "body": "sun",
+  "n": 120,
+  "meanDElArcsec": -2.4,
+  "maxAbsDElArcsec": 6.8,
+  "maxSepArcsec": 15.2
+ },
+ {
+  "site": "shackleton_rim_high",
+  "body": "earth",
+  "n": 120,
+  "meanDElArcsec": 0.5,
+  "maxAbsDElArcsec": 6.4,
+  "maxSepArcsec": 12.7
+ },
+ {
+  "site": "malapert",
+  "body": "sun",
+  "n": 120,
+  "meanDElArcsec": -2.6,
+  "maxAbsDElArcsec": 6.5,
+  "maxSepArcsec": 15.4
+ },
+ {
+  "site": "malapert",
+  "body": "earth",
+  "n": 120,
+  "meanDElArcsec": 0.4,
+  "maxAbsDElArcsec": 6.7,
+  "maxSepArcsec": 12.6
+ },
+ {
+  "site": "malapert_summit",
+  "body": "sun",
+  "n": 120,
+  "meanDElArcsec": -2.5,
+  "maxAbsDElArcsec": 6.0,
+  "maxSepArcsec": 14.9
+ },
+ {
+  "site": "malapert_summit",
+  "body": "earth",
+  "n": 120,
+  "meanDElArcsec": 0.4,
+  "maxAbsDElArcsec": 6.4,
+  "maxSepArcsec": 12.7
+ }
+]

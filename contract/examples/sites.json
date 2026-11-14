@@ -1,0 +1,33 @@
+{
+ "schemaVersion": 1,
+ "sites": [
+  {
+   "id": "shackleton_coords_proto",
+   "name": "Shackleton (prototype coordinates, crater floor)",
+   "latDeg": -89.7,
+   "lonDeg": 129.8,
+   "group": "pole"
+  },
+  {
+   "id": "shackleton_rim_high",
+   "name": "Shackleton rim (high point)",
+   "latDeg": -89.779,
+   "lonDeg": -156.34,
+   "group": "pole"
+  },
+  {
+   "id": "malapert",
+   "name": "Malapert (prototype coordinates, slope)",
+   "latDeg": -86.0,
+   "lonDeg": 0.1,
+   "group": "pole"
+  },
+  {
+   "id": "malapert_summit",
+   "name": "Malapert summit (4 km away)",
+   "latDeg": -85.987,
+   "lonDeg": 2.06,
+   "group": "pole"
+  }
+ ]
+}
