@@ -30,6 +30,18 @@ Extents are the square bounds of each grid; the latitude in brackets is approxim
 - **Global view**: 240 m file, heavily downsampled.
 - **Data-quality indicator**: the `LDEC` counts file.
 
+## Official feature coordinates (site catalogue, `iau_*` sites)
+
+Source: IAU / USGS *Gazetteer of Planetary Nomenclature*, file `MOON_nomenclature_center_pts.zip`
+(<https://planetarynames.wr.usgs.gov/shapefiles/MOON_nomenclature_center_pts.zip>, 23.8 MB,
+downloaded 2026-11-14). Metadata: "Planetary Nomenclature of the Moon", origin International Astronomical
+Union (IAU) and USGS, use constraints "Public domain".
+
+- Values used: `center_lat`, `center_lon` (east longitude 0–360 in the file, converted to −180..180).
+- A crater's centre point is on the crater **floor**, not the rim. No official rim or landing-region
+  coordinates were found (Nobile Rim 1, de Gerlache Rim 2, Shackleton connecting ridge), so none were added.
+- Amundsen (−84.4398°, 83.0691°) was not added: the 150 km terrain horizon does not fit in the 80 m map there.
+
 ## NASA polar illumination maps (validation only)
 
 `AVGVISIB_85S_060M_201608.TIF` (Sun) and `AVGVISIB_85S_060M_201608_EARTH.TIF` (Earth),

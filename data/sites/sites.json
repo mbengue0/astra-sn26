@@ -1,10 +1,22 @@
 {
  "schemaVersion": 1,
- "note": "Test sites. Coordinates of the *_rim_high and *_summit points are the highest pixel of the LOLA 80 m map near each feature (re-picked 2026-11-14 after a terrain-reading fix); they are NOT official site coordinates.",
+ "note": "The first 4 sites are test sites: the *_rim_high and *_summit points are the highest pixel of the LOLA 80 m map near each feature (re-picked 2026-11-14 after a terrain-reading fix); they are NOT official site coordinates. The iau_* sites are the official IAU feature centre points (IAU/USGS Gazetteer of Planetary Nomenclature, MOON_nomenclature_center_pts, public domain; see data/README.md); for a crater the centre point is on the crater floor.",
  "sites": [
   {"id": "shackleton_coords_proto", "name": "Shackleton (prototype coordinates, crater floor)", "latDeg": -89.7, "lonDeg": 129.8, "group": "pole"},
   {"id": "shackleton_rim_high", "name": "Shackleton rim (high point)", "latDeg": -89.77967, "lonDeg": -156.35098, "group": "pole"},
   {"id": "malapert", "name": "Malapert (prototype coordinates, slope)", "latDeg": -86.0, "lonDeg": 0.1, "group": "pole"},
-  {"id": "malapert_summit", "name": "Malapert summit (4 km away)", "latDeg": -85.98763, "lonDeg": 2.0528, "group": "pole"}
+  {"id": "malapert_summit", "name": "Malapert summit (4 km away)", "latDeg": -85.98763, "lonDeg": 2.0528, "group": "pole"},
+  {"id": "iau_mons_malapert", "name": "Mons Malapert (IAU centre point, mountain)", "latDeg": -85.98, "lonDeg": -1.67, "group": "pole"},
+  {"id": "iau_mons_mouton", "name": "Mons Mouton (IAU centre point, mountain)", "latDeg": -84.6, "lonDeg": 31.0, "group": "pole"},
+  {"id": "iau_nobile", "name": "Nobile crater (IAU centre point, crater floor)", "latDeg": -85.2752, "lonDeg": 53.2725, "group": "pole"},
+  {"id": "iau_malapert_crater", "name": "Malapert crater (IAU centre point, crater floor)", "latDeg": -84.9998, "lonDeg": 11.4031, "group": "pole"},
+  {"id": "iau_shackleton", "name": "Shackleton crater (IAU centre point, crater floor)", "latDeg": -89.67, "lonDeg": 129.78, "group": "pole"},
+  {"id": "iau_haworth", "name": "Haworth crater (IAU centre point, crater floor)", "latDeg": -87.45, "lonDeg": -5.17, "group": "pole"},
+  {"id": "iau_shoemaker", "name": "Shoemaker crater (IAU centre point, crater floor)", "latDeg": -88.137, "lonDeg": 45.911, "group": "pole"},
+  {"id": "iau_faustini", "name": "Faustini crater (IAU centre point, crater floor)", "latDeg": -87.1832, "lonDeg": 84.3099, "group": "pole"},
+  {"id": "iau_de_gerlache", "name": "de Gerlache crater (IAU centre point, crater floor)", "latDeg": -88.4849, "lonDeg": -88.3447, "group": "pole"},
+  {"id": "iau_sverdrup", "name": "Sverdrup crater (IAU centre point, crater floor)", "latDeg": -88.3209, "lonDeg": -153.3875, "group": "pole"},
+  {"id": "iau_slater", "name": "Slater crater (IAU centre point, crater floor)", "latDeg": -88.0792, "lonDeg": 111.2881, "group": "pole"},
+  {"id": "iau_cabeus", "name": "Cabeus crater (IAU centre point, crater floor)", "latDeg": -85.3303, "lonDeg": -42.1327, "group": "pole"}
  ]
 }

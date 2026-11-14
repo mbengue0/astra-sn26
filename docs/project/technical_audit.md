@@ -8,7 +8,7 @@ First written on the morning of 2026-11-14; updated the same evening after the P
 | Astronomy (Sun / Earth positions) | **Done, validated** | astronomy-engine; 15.5″ max vs JPL Horizons |
 | Terrain horizon | **Done, validated (Sun)** | LOLA 80 m; Sun ±2 pts vs NASA maps; Earth +2.1 to +6.1 pts open. Half-pixel terrain shift fixed on 2026-11-14 |
 | Visibility, windows, metrics | **Done** | contract format v1, 30-min step |
-| API (FastAPI) | **Done** | `GET /sites`, `GET /horizon`, `POST /analysis`, CORS, horizon cache, 44 automated tests |
+| API (FastAPI) | **Done** | `GET /sites`, `GET /horizon`, `POST /analysis`, CORS, horizon cache, 45 automated tests |
 | Custom coordinates | **Done** | any lat/lon; coverage check (refused outside the map or if the 150 km horizon circle is incomplete) |
 | Comparison | Partial | API ready (two `POST /analysis` calls); no comparison UI yet (Pole 3) |
 | Timeline | Partial | static figure only (`docs/figures/3_timeline.png`); UI is Pole 3 |
