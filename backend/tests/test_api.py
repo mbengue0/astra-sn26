@@ -10,7 +10,21 @@ from conftest import CATALOGUE_IDS, START, contract_example, needs_ldem
 def test_sites_returns_the_catalogue(client):
     r = client.get("/sites")
     assert r.status_code == 200
-    assert [s["id"] for s in r.json()["sites"]] == CATALOGUE_IDS
+    ids = [s["id"] for s in r.json()["sites"]]
+    assert ids[:4] == CATALOGUE_IDS                      # the 4 sites of contract/examples/
+    assert len(ids) == 16 and len(set(ids)) == 16        # + 12 official IAU feature points, unique ids
+    for s in r.json()["sites"]:
+        assert -90 <= s["latDeg"] <= 90 and -180 <= s["lonDeg"] <= 180
+
+
+@needs_ldem
+def test_every_catalogue_site_has_a_complete_terrain_horizon(client):
+    import rasterio
+    from astra_engine.horizon import coverage
+    from conftest import LDEM
+    with rasterio.open(LDEM) as ds:
+        for s in client.get("/sites").json()["sites"]:
+            assert coverage(ds, s["latDeg"], s["lonDeg"])["complete"], s["id"]
 
 
 # ---------- POST /analysis: results ----------
