@@ -1,22 +1,31 @@
-# Technical audit (D0) — 2026-11-14
+# Technical audit — updated 2026-11-15
 
-First written on the morning of 2026-11-14; updated the same evening after the Phase 3 API work
-(see [`phase3_pole2.md`](phase3_pole2.md)).
+First written on the morning of 2026-11-14 (D0), updated after the Phase 3 API work
+(see [`phase3_pole2.md`](phase3_pole2.md)) and again on 2026-11-15 after the frontend was connected to the engine.
 
 | Area | Status | Notes |
 |---|---|---|
 | Astronomy (Sun / Earth positions) | **Done, validated** | astronomy-engine; 15.5″ max vs JPL Horizons |
 | Terrain horizon | **Done, validated (Sun)** | LOLA 80 m; Sun ±2 pts vs NASA maps; Earth +2.1 to +6.1 pts open. Half-pixel terrain shift fixed on 2026-11-14 |
-| Visibility, windows, metrics | **Done** | contract format v1, 30-min step |
-| API (FastAPI) | **Done** | `GET /sites`, `GET /horizon`, `POST /analysis`, CORS, horizon cache, 51 automated tests |
+| Visibility, windows, metrics | **Done** | contract format v1, 30-min step, set/rise times refined to the minute |
+| API (FastAPI) | **Done** | `GET /sites`, `GET /horizon`, `POST /analysis`, CORS, horizon cache |
 | Custom coordinates | **Done** | any lat/lon; coverage check (refused outside the map or if the 150 km horizon circle is incomplete) |
-| Comparison | Partial | API ready (two `POST /analysis` calls); no comparison UI yet (Pole 3) |
-| Timeline | Partial | static figure only (`docs/figures/3_timeline.png`); UI is Pole 3 |
-| Frontend | Missing | Pole 3; can call the API or use `contract/examples/` |
-| Set/rise times to the minute | **Done** | refined around each change; equal to a minute-by-minute run |
-| Precomputed results | **Done** | one year for all 16 catalogue sites in `contract/precomputed/` (static files, instant, no server) |
-| Deployment | Missing | public link required for submission; the 189 MB terrain file must be on the server |
-| Terrain 3D view | Missing | P2 |
+| Precomputed results | **Done** | one year (2026-11-14 → 2027-11-14) for the 16 catalogue sites in `contract/precomputed/` (static files, no server) |
+| Frontend (Pole 3 app) | **Connected to the engine** | catalogue, site cards, mission analysis, timeline and comparison use the precomputed engine year; custom coordinates call the API |
+| Globe lighting | **Done** | lit from the engine sub-solar point (`subsolar.json`) |
+| Celestial Horizon view | **Done (data)** | true engine skyline and engine Sun / Earth positions; Pole 3 rendering kept |
+| Local Terrain 3D view | **Done (data)** | real LOLA 80 m tile (20 × 20 km) for the 4 featured sites, light from the engine Sun direction; shadows from terrain beyond 10 km are not drawn (a note says so) |
+| Site Explorer mission metrics | **Not engine-based** | still uses `frontend/src/data/solar-data.ts` (approximate ephemeris) |
+| Periods outside the precomputed year | Fallback | the app falls back to its own browser calculation, which is not validated |
+| Docker image (API) | **Done** | LOLA file downloaded from NASA PGDA at build with a size check; same answers as the contract; 1 year ≈ 5 s |
+| Public deployment | **Partial** | the frontend needs no server (static files); the API has no public host (no payment card in the team), it runs locally with Docker for the demo |
+
+## Automated tests
+
+61 backend tests (`cd backend && python -m pytest -q`, with `ASTRA_LDEM_PATH` set to the 80 m LOLA file;
+without it the 36 terrain tests are skipped). They cover the API, the coverage rule, the precomputed files,
+`slice_result` and the terrain tiles (orientation checked against the LDEM).
+The TypeScript `sliceResult` gives the same answer as Python on 200/200 random periods.
 
 ## Data already available
 LOLA DEMs 80 / 40 / 20 m (to 80° S), 10 m (to ~83° S), 240 m (to 60° S) + counts layer;
@@ -28,9 +37,12 @@ NASA illumination maps (validation). See [`../../data/README.md`](../../data/REA
   [`../scientific/limitations.md`](../scientific/limitations.md)).
 - Effect of the 2 m sensor height on an 80 m DEM not verified against an independent reference.
 - 80 m and 40 m DEMs agree (Earth within 0.8 points); 20 m / 10 m DEMs not tested.
+- Local Terrain view: at a grazing Sun (a few degrees) about half of the 80 m terrain facets face away from
+  the Sun (Mons Malapert: 49 % at 4°, median slope 19°), so the view shows many dark patches. This is the real
+  geometry, not a rendering error.
 
 ## Priority of remaining work
-1. P0 — Pole 3: frontend main journey and comparison, calling the API.
-2. P0 — Pole 2: deploy the API publicly.
+1. P0 — Site Explorer metrics from the engine (last screen with approximate numbers).
+2. P1 — Public API host (needs a payment card or a free host with enough CPU).
 3. P1 — Pole 1: Earth-visibility offset.
-4. P2 — 3D terrain view, finer DEMs.
+4. P2 — Finer DEMs (20 m / 10 m), terrain tiles for more sites.
