@@ -18,7 +18,14 @@ interface ImmersiveLunarSkyProps {
   viewMode: 'ground' | 'orbital';
   showHud: boolean;
   onTargetClick?: (target: 'sun' | 'earth') => void;
+  /** Engine terrain skyline (360 values, azimuth 0 = north, clockwise). Enables the accurate view. */
+  skylineDeg?: number[] | null;
 }
+
+// Mean apparent radii in the lunar sky (degrees). Sun: 695,700 km at ~1 au; Earth: 6,371 km at ~384,000 km
+// (the engine gives 0.90-1.02 deg over a month for the Earth).
+const SUN_RADIUS_DEG = 0.2666;
+const EARTH_RADIUS_DEG = 0.95;
 
 export default function ImmersiveLunarSky({
   site,
@@ -27,7 +34,11 @@ export default function ImmersiveLunarSky({
   viewMode,
   showHud,
   onTargetClick,
+  skylineDeg,
 }: ImmersiveLunarSkyProps) {
+  // Accurate view: the camera stands at the observation point (dome centre), the skyline is the engine's
+  // terrain horizon and the Sun / Earth discs have their true angular size. Angles on screen are true angles.
+  const accurate = viewMode === 'ground' && !!skylineDeg && skylineDeg.length === 360;
   const { camera } = useThree();
   const controlsRef = useRef<any>(null);
 
@@ -45,7 +56,15 @@ export default function ImmersiveLunarSky({
   // Adjust camera position depending on viewMode (Ground 1st-person vs Orbit Overview)
   React.useEffect(() => {
     if (controlsRef.current) {
-      if (viewMode === 'ground') {
+      if (accurate) {
+        // Camera at the observation point, looking toward the Sun (or the Earth if the Sun is far below)
+        const look = sun.elevationDeg > -5 ? sunPos : earthPos;
+        const d = new THREE.Vector3(...look).normalize();
+        controlsRef.current.target.set(0, 0, 0);
+        camera.position.set(-d.x * 0.01, -d.y * 0.01, -d.z * 0.01);
+        controlsRef.current.minDistance = 0.01;
+        controlsRef.current.maxDistance = 0.01;
+      } else if (viewMode === 'ground') {
         // Place camera at astronaut eye-level on the crater rim looking directly toward the Sun / Solar Vector
         camera.position.set(2.8, 1.6, 3.2);
         const lookDir = sun.elevationDeg > -10 ? sunPos : earthPos;
@@ -61,7 +80,7 @@ export default function ImmersiveLunarSky({
       }
       controlsRef.current.update();
     }
-  }, [viewMode]);
+  }, [viewMode, accurate]);
 
   return (
     <group>
@@ -91,16 +110,20 @@ export default function ImmersiveLunarSky({
       {/* Ambient Starlight in the black void */}
       <ambientLight intensity={0.06} />
 
-      {/* 1. Realistic 3D Cratered Polar Terrain */}
-      <CrateredLunarTerrain radius={skyRadius} site={site} />
+      {/* 1. Terrain: the engine's real skyline (accurate view) or the decorative crater field */}
+      {accurate ? (
+        <SkylineTerrain radius={skyRadius * 0.96} skylineDeg={skylineDeg!} />
+      ) : (
+        <CrateredLunarTerrain radius={skyRadius} site={site} />
+      )}
 
-      {/* 2. Lunar Surface Outpost / Lander Assets */}
-      <LunarSurfaceOutpost
+      {/* 2. Lunar Surface Outpost / Lander Assets (not in the accurate view: the camera stands there) */}
+      {!accurate && <LunarSurfaceOutpost
         sunPos={sunPos}
         earthPos={earthPos}
         sunVisible={sun.isVisible}
         earthVisible={earth.isVisible}
-      />
+      />}
 
       {/* 3. Local Horizon & Coordinate Rings */}
       <SkyCoordinatesRing radius={skyRadius} />
@@ -113,6 +136,7 @@ export default function ImmersiveLunarSky({
         isVisible={sun.isVisible}
         showHud={showHud}
         onClick={() => onTargetClick?.('sun')}
+        scale={accurate ? skyRadius * Math.tan((SUN_RADIUS_DEG * Math.PI) / 180) : undefined}
       />
 
       {/* 5. Photorealistic 3D Earth Entity with Atmosphere & Clouds */}
@@ -125,6 +149,7 @@ export default function ImmersiveLunarSky({
         isVisible={earth.isVisible}
         showHud={showHud}
         onClick={() => onTargetClick?.('earth')}
+        scale={accurate ? skyRadius * Math.tan((EARTH_RADIUS_DEG * Math.PI) / 180) : undefined}
       />
 
       {/* Camera Controls with strict ground-level polar clamping */}
@@ -134,8 +159,9 @@ export default function ImmersiveLunarSky({
         enableDamping={true}
         dampingFactor={0.06}
         rotateSpeed={0.7}
-        maxPolarAngle={Math.PI / 2 - 0.05}
-        minPolarAngle={0.05}
+        enableZoom={!accurate}
+        maxPolarAngle={accurate ? Math.PI * 0.62 : Math.PI / 2 - 0.05}
+        minPolarAngle={accurate ? Math.PI * 0.3 : 0.05}
       />
     </group>
   );
@@ -383,6 +409,45 @@ function LunarSurfaceOutpost({
 }
 
 // ----------------------------------------------------------------------------
+// B2. Real terrain skyline (ASTRA-SN engine): an opaque wall from far below the horizontal plane up to the
+// skyline elevation in every direction. The Sun or the Earth is hidden exactly when it is below the ridge.
+// ----------------------------------------------------------------------------
+function SkylineTerrain({ radius, skylineDeg }: { radius: number; skylineDeg: number[] }) {
+  const { wall, ridge } = useMemo(() => {
+    const pos: number[] = [];
+    const idx: number[] = [];
+    const ridgePts: THREE.Vector3[] = [];
+    for (let a = 0; a <= 360; a++) {
+      const top = astronomicalService.skyAnglesToVector3(a, skylineDeg[a % 360], radius);
+      const bottom = astronomicalService.skyAnglesToVector3(a, -60, radius);
+      pos.push(...top, ...bottom);
+      ridgePts.push(new THREE.Vector3(...top));
+      if (a < 360) {
+        const i = a * 2;
+        idx.push(i, i + 1, i + 2, i + 1, i + 3, i + 2);
+      }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setIndex(idx);
+    g.computeVertexNormals();
+    return { wall: g, ridge: new THREE.BufferGeometry().setFromPoints(ridgePts) };
+  }, [radius, skylineDeg]);
+
+  return (
+    <group>
+      <mesh geometry={wall}>
+        <meshBasicMaterial color="#2b2f36" side={THREE.DoubleSide} />
+      </mesh>
+      <line>
+        <primitive object={ridge} attach="geometry" />
+        <lineBasicMaterial color="#cbd5e1" transparent opacity={0.9} />
+      </line>
+    </group>
+  );
+}
+
+// ----------------------------------------------------------------------------
 // C. Horizon Coordinate Rings & Cardinal Markers
 // ----------------------------------------------------------------------------
 function SkyCoordinatesRing({ radius }: { radius: number }) {
@@ -439,6 +504,7 @@ function ImmersiveSunEntity({
   isVisible,
   showHud,
   onClick,
+  scale,
 }: {
   position: [number, number, number];
   azimuth: number;
@@ -446,6 +512,7 @@ function ImmersiveSunEntity({
   isVisible: boolean;
   showHud: boolean;
   onClick?: () => void;
+  scale?: number;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const haloRef = useRef<THREE.Mesh>(null);
@@ -464,7 +531,7 @@ function ImmersiveSunEntity({
     }
   });
 
-  const sunScale = 1.4;
+  const sunScale = scale ?? 1.4;
 
   return (
     <group position={position} onClick={onClick}>
@@ -542,6 +609,7 @@ function ImmersiveEarthEntity({
   isVisible,
   showHud,
   onClick,
+  scale,
 }: {
   position: [number, number, number];
   sunPosition: [number, number, number];
@@ -551,6 +619,7 @@ function ImmersiveEarthEntity({
   isVisible: boolean;
   showHud: boolean;
   onClick?: () => void;
+  scale?: number;
 }) {
   const earthRef = useRef<THREE.Group>(null);
   const cloudRef = useRef<THREE.Mesh>(null);
@@ -563,7 +632,7 @@ function ImmersiveEarthEntity({
   dayTexture.colorSpace = THREE.SRGBColorSpace;
 
   // Real physical size in the lunar sky (~1.9° apparent diameter, ~3.8x Sun)
-  const earthScale = 2.85;
+  const earthScale = scale ?? 2.85;
 
   // Direction of Sun relative to Earth to compute phase terminator
   const sunRelLight = useMemo(() => {

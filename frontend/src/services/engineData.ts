@@ -41,6 +41,13 @@ let index: PrecomputedIndex | null = null;
 
 interface Subsolar { startUtc: string; stepHours: number; latDeg: number[]; lonDeg: number[] }
 let subsolar: Subsolar | null = null;
+/** Terrain skyline of each site: elevation (deg) of the horizon for azimuth 0..359 (horizon_<siteId>.json). */
+const skylines = new Map<string, number[]>();
+
+/** The engine's terrain skyline for a site (360 values, azimuth 0 = north, clockwise), or null. */
+export function skylineDeg(siteId: string): number[] | null {
+  return skylines.get(siteId) ?? null;
+}
 
 /** Load the precomputed year of the given sites and the sub-solar points (call once before rendering). */
 export async function loadEngineData(siteIds: string[]): Promise<void> {
@@ -51,11 +58,13 @@ export async function loadEngineData(siteIds: string[]): Promise<void> {
   };
   index = await get<PrecomputedIndex>('index.json');
   const ids = index.sites.map((s) => s.id).filter((id) => siteIds.includes(id));
-  const [results, sub] = await Promise.all([
+  const [results, horizons, sub] = await Promise.all([
     Promise.all(ids.map((id) => get<EngineResult>(`result_${id}.json`))),
+    Promise.all(ids.map((id) => get<{ siteId: string; elevDeg: number[] }>(`horizon_${id}.json`))),
     get<Subsolar>('subsolar.json'),
   ]);
   results.forEach((r) => yearResults.set(r.siteId, r));
+  horizons.forEach((h) => skylines.set(h.siteId, h.elevDeg));
   subsolar = sub;
 }
 
@@ -289,6 +298,7 @@ export async function computeCustomSite(site: LunarSite): Promise<CustomResult> 
     const hz = await fetch(`${api.replace(/\/$/, '')}/horizon?latDeg=${site.lat}&lonDeg=${site.lon}`).then((x) => x.json());
     const yearHours = hoursBetween(index.startUtc, index.endUtc);
     site.elevation = Math.round(hz.groundElevationM);
+    skylines.set(site.id, hz.elevDeg);
     site.sunVisibilityPct = round1((100 * totalHours(year.windows.sun)) / yearHours);
     site.earthVisibilityPct = round1((100 * totalHours(year.windows.earth)) / yearHours);
     site.maxSolarElevation = Math.max(...year.sun.elevDeg);
