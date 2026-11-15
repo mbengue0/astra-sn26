@@ -39,16 +39,43 @@ const DATA_URL = `${(import.meta as any).env?.BASE_URL ?? '/'}data/precomputed/`
 const yearResults = new Map<string, EngineResult>();
 let index: PrecomputedIndex | null = null;
 
-/** Load the precomputed year of every catalogue site (call once before rendering). */
-export async function loadEngineData(): Promise<void> {
+interface Subsolar { startUtc: string; stepHours: number; latDeg: number[]; lonDeg: number[] }
+let subsolar: Subsolar | null = null;
+
+/** Load the precomputed year of the given sites and the sub-solar points (call once before rendering). */
+export async function loadEngineData(siteIds: string[]): Promise<void> {
   const get = async <T,>(name: string): Promise<T> => {
     const r = await fetch(DATA_URL + name);
     if (!r.ok) throw new Error(`${name}: HTTP ${r.status}`);
     return r.json();
   };
   index = await get<PrecomputedIndex>('index.json');
-  const results = await Promise.all(index.sites.map((s) => get<EngineResult>(`result_${s.id}.json`)));
+  const ids = index.sites.map((s) => s.id).filter((id) => siteIds.includes(id));
+  const [results, sub] = await Promise.all([
+    Promise.all(ids.map((id) => get<EngineResult>(`result_${id}.json`))),
+    get<Subsolar>('subsolar.json'),
+  ]);
   results.forEach((r) => yearResults.set(r.siteId, r));
+  subsolar = sub;
+}
+
+/**
+ * Sub-solar point (where the Sun is at the zenith) at a UTC time, from the engine (hourly, interpolated).
+ * Used to light the 3D globe with the real Sun direction. Null outside the precomputed year.
+ */
+export function subsolarPoint(date: string): { latDeg: number; lonDeg: number } | null {
+  if (!subsolar) return null;
+  const h = (ms(toUtcIso(date)) - ms(subsolar.startUtc)) / (subsolar.stepHours * 3_600_000);
+  const i = Math.floor(h);
+  if (i < 0 || i + 1 >= subsolar.latDeg.length) return null;
+  const f = h - i;
+  let dLon = subsolar.lonDeg[i + 1] - subsolar.lonDeg[i];
+  if (dLon > 180) dLon -= 360;                 // longitude wraps at ±180°
+  if (dLon < -180) dLon += 360;
+  let lon = subsolar.lonDeg[i] + f * dLon;
+  if (lon > 180) lon -= 360;
+  if (lon < -180) lon += 360;
+  return { latDeg: subsolar.latDeg[i] + f * (subsolar.latDeg[i + 1] - subsolar.latDeg[i]), lonDeg: lon };
 }
 
 export function precomputedPeriod(): { startUtc: string; endUtc: string } | null {

@@ -289,6 +289,7 @@ export default function SiteExplorer() {
 
             <NasaMoonGlobe
               mode={explorationMode}
+              sunDate={selectedDate}
               selectedSite={selectedSite}
               onSelectSite={handleSelectSite}
               autoRotate={autoRotate}

@@ -78,3 +78,24 @@ def sun_earth_series(lat_deg, lon_deg, start_utc, days=30, step_min=30, site_hei
             out[f"{name}_az"][i] = math.degrees(math.atan2(u @ east, u @ north)) % 360
             out[f"{name}_r"][i] = math.degrees(math.asin(radius / dist))
     return times, out
+
+
+def subsolar_series(start_utc, days, step_min=60):
+    """Sub-solar point on the Moon (where the Sun is at the zenith), in the Moon-fixed frame.
+
+    Same chain as sun_earth_series (astronomy-engine, IAU 2015 Moon rotation), seen from the Moon's
+    centre. Used to light the 3D globe with the real Sun direction.
+    Returns (lat_deg, lon_deg) numpy arrays; longitude east -180..180.
+    """
+    t0 = ae.Time.Parse(start_utc)
+    n = int(days * 24 * 60 / step_min)
+    lat, lon = np.empty(n), np.empty(n)
+    for i in range(n):
+        t = t0.AddDays(i * step_min / 1440.0)
+        moon = ae.GeoMoon(t)
+        sun = ae.GeoVector(ae.Body.Sun, t, True)
+        v = moon_fixed_matrix(t) @ (np.array([sun.x - moon.x, sun.y - moon.y, sun.z - moon.z]))
+        v /= np.linalg.norm(v)
+        lat[i] = math.degrees(math.asin(v[2]))
+        lon[i] = math.degrees(math.atan2(v[1], v[0]))
+    return lat, lon

@@ -11,3 +11,5 @@
 | 7 | 2026-11-14 | No overall "best site" score | trade-offs, not verdicts | agreed |
 | 8 | — | Frontend stack and whether to build on any existing code | to decide by the team | **open** |
 | 9 | — | DEM resolution per use (horizon, 3D view) | to decide after tests | **open** |
+| 10 | 2026-11-15 | The web app shows 4 sites: Shackleton rim (high point), Mons Malapert, Mons Mouton, Haworth crater; the engine/API keep 16 | readable globe, clear contrasts (best Sun, permanent Earth view, second massif, permanent shadow) | agreed (Pole 2) |
+| 11 | 2026-11-15 | 3D globe lit from the real Sun direction (engine sub-solar point) | the previous fixed light made polar sites look like they were in the night side | agreed (Pole 2) |

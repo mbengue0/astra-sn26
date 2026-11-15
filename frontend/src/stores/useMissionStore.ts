@@ -74,7 +74,7 @@ export interface MissionStoreState {
 
 const DEFAULT_START_DATE = '2026-11-20T12:00';
 const DEFAULT_DURATION_DAYS = 14;
-const DEFAULT_CANDIDATE_IDS = ['iau_mons_malapert', 'shackleton_rim_high', 'iau_nobile'];
+const DEFAULT_CANDIDATE_IDS = ['iau_mons_malapert', 'shackleton_rim_high', 'iau_mons_mouton'];
 
 const DEFAULT_CONFIG: AnalysisConfiguration = {
   samplingIntervalHours: 1,

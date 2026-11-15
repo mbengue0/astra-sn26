@@ -251,6 +251,7 @@ function MoonVisualizationFocus() {
             <Stars radius={80} depth={50} count={3500} factor={4} saturation={0} fade speed={0.2} />
             <NasaMoonGlobe
               mode="orbital"
+              sunDate={startDate}
               selectedSite={hasSiteBeenSelected ? (highlightedSite || selectedSite) : null}
               activeSite={hoveredSite || (isSiteFocused ? (highlightedSite || selectedSite) : null)}
               onActiveSiteScreenPos={setActiveSiteScreenData}

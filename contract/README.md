@@ -72,6 +72,7 @@ Generated with `backend/scripts/precompute.py`. About 1.4 MB per site (about 0.3
 | `index.json` | `startUtc`, `endUtc`, `stepMinutes`, `sensorHeightM`, `terrainSource`, `sites` (same list as `sites.json`) |
 | `result_<siteId>.json` | same format as `result_<siteId>.json` above, for the whole year |
 | `horizon_<siteId>.json` | same format as `horizon_<siteId>.json` above |
+| `subsolar.json` | hourly sub-solar point (`latDeg`, `lonDeg`, Moon-fixed frame) from `startUtc`; real Sun direction for the 3D globe (`backend/scripts/export_subsolar.py`) |
 
 **Showing a shorter period** (the user picks a start date and a duration inside the year) — cut it out of
 the year file; this gives exactly the result of a direct analysis of that period (tested):

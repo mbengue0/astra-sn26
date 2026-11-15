@@ -47,7 +47,16 @@ const SUBTITLE = (id: string): string =>
   : id.startsWith('iau_') ? 'IAU feature centre point · crater floor'
   : 'Test site (not an official site coordinate)';
 
-export const SITES: LunarSite[] = engineSites.sites.map((s) => ({
+/**
+ * Sites shown in the app (4 maximum, team decision 2026-11-15). The engine and the API keep all 16.
+ * Chosen for contrast: best sunlight, permanent Earth view, a second massif, a permanently shadowed crater.
+ */
+export const FEATURED_SITE_IDS = ['shackleton_rim_high', 'iau_mons_malapert', 'iau_mons_mouton', 'iau_haworth'];
+
+export const SITES: LunarSite[] = engineSites.sites
+  .filter((s) => FEATURED_SITE_IDS.includes(s.id))
+  .sort((a, b) => FEATURED_SITE_IDS.indexOf(a.id) - FEATURED_SITE_IDS.indexOf(b.id))
+  .map((s) => ({
   id: s.id,
   name: s.name,
   subtitle: SUBTITLE(s.id),
