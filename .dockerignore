@@ -1,0 +1,7 @@
+# Send only what the image needs to Docker
+*
+!backend/requirements-api.txt
+!backend/astra_engine/
+!backend/api/
+!data/sites/
+**/__pycache__
