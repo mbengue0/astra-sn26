@@ -47,6 +47,7 @@ import { getMissionMetrics } from '../data/solar-data';
 import { formatDegrees, formatElevation, formatPercent } from '../utils/formatters';
 import NasaMoonGlobe from '../components/three/NasaMoonGlobe';
 import { lunarTerrainService } from '../services/lunarTerrainService';
+import { computeCustomSite } from '../services/engineData';
 
 type EduTab = 'overview' | 'sun' | 'earth' | 'ice' | 'missions';
 
@@ -96,7 +97,7 @@ export default function SiteExplorer() {
     return sites;
   }, [categoryFilter, search]);
 
-  const handleCustomCoords = () => {
+  const handleCustomCoords = async () => {
     const lat = parseFloat(customLat);
     const lon = parseFloat(customLon);
     if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
@@ -117,6 +118,9 @@ export default function SiteExplorer() {
           realElev / 1000
         ).toFixed(2)} km above lunar datum).`,
       };
+      // Validated engine results for this point (whole precomputed year) when the engine API is available
+      const res = await computeCustomSite(customSite);
+      if (!res.ok) customSite.description += ' (Engine API not used: ' + res.reason.replace(/\.$/, '') + '. Values are a browser estimate, not validated.)';
       handleSelectSite(customSite);
       setCustomLat('');
       setCustomLon('');
@@ -285,6 +289,7 @@ export default function SiteExplorer() {
 
             <NasaMoonGlobe
               mode={explorationMode}
+              sunDate={selectedDate}
               selectedSite={selectedSite}
               onSelectSite={handleSelectSite}
               autoRotate={autoRotate}

@@ -13,6 +13,7 @@ import type { LunarSite } from '../../types';
 import { SITES, CATEGORIES, formatCoordinates } from '../../data/sites';
 import { lunarTerrainService, LocalTerrainData } from '../../services/lunarTerrainService';
 import { formatElevation } from '../../utils/formatters';
+import { subsolarPoint } from '../../services/engineData';
 
 // Convert lat/lon into 3D Cartesian coordinates on sphere
 export function latLonToSphere(lat: number, lon: number, radius: number): [number, number, number] {
@@ -635,8 +636,42 @@ function CameraRig({
 // ----------------------------------------------------------------------------
 // 3. Main Export Component
 // ----------------------------------------------------------------------------
+/**
+ * Sunlight from the real Sun direction (orbital view): the light points from the sub-solar point given by
+ * the ASTRA-SN engine for `date`, and follows the Moon's rotation in the scene.
+ * Falls back to the previous fixed light when the date is outside the precomputed year.
+ */
+function RealSunLight({ date, moonGroupRef }: { date?: string; moonGroupRef: React.RefObject<THREE.Group | null> }) {
+  const lightRef = useRef<THREE.DirectionalLight>(null);
+  const sunLocal = useMemo(() => {
+    const p = date ? subsolarPoint(date) : null;
+    return p ? new THREE.Vector3(...latLonToSphere(p.latDeg, p.lonDeg, 1)) : null;
+  }, [date]);
+  const q = useMemo(() => new THREE.Quaternion(), []);
+  useFrame(() => {
+    if (!lightRef.current || !sunLocal) return;
+    if (moonGroupRef.current) moonGroupRef.current.getWorldQuaternion(q);
+    else q.identity();
+    lightRef.current.position.copy(sunLocal).applyQuaternion(q).multiplyScalar(20);
+  });
+  return (
+    <directionalLight
+      ref={lightRef}
+      position={sunLocal ? (sunLocal.clone().multiplyScalar(20).toArray() as [number, number, number]) : [8, 3.5, 7]}
+      intensity={3.2}
+      color="#FFFFFF"
+      castShadow
+      shadow-mapSize-width={2048}
+      shadow-mapSize-height={2048}
+      shadow-bias={-0.0001}
+    />
+  );
+}
+
 export interface NasaMoonGlobeProps {
   mode: 'orbital' | 'surface';
+  /** UTC date of the Sun position used for the lighting (orbital view). */
+  sunDate?: string;
   selectedSite?: LunarSite | null;
   activeSite?: LunarSite | null;
   onActiveSiteScreenPos?: (data: SiteScreenProjectorData | null) => void;
@@ -651,6 +686,7 @@ export interface NasaMoonGlobeProps {
 
 export default function NasaMoonGlobe({
   mode,
+  sunDate,
   selectedSite,
   activeSite,
   onActiveSiteScreenPos,
@@ -758,15 +794,19 @@ export default function NasaMoonGlobe({
       />
 
       {/* Cinematic Deep Space Solar Illumination (grazing angle in surface mode for authentic crater shadow relief) */}
-      <directionalLight
-        position={mode === 'surface' ? [18, 5, 14] : [8, 3.5, 7]}
-        intensity={mode === 'surface' ? 3.8 : 3.2}
-        color="#FFFFFF"
-        castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
-        shadow-bias={-0.0001}
-      />
+      {mode === 'surface' ? (
+        <directionalLight
+          position={[18, 5, 14]}
+          intensity={3.8}
+          color="#FFFFFF"
+          castShadow
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
+          shadow-bias={-0.0001}
+        />
+      ) : (
+        <RealSunLight date={sunDate} moonGroupRef={moonGroupRef} />
+      )}
 
       {/* Soft Earthshine fill light illuminating the night side subtly */}
       <directionalLight
@@ -782,10 +822,14 @@ export default function NasaMoonGlobe({
       <Html center pointerEvents="none">
         <div
           style={{ display: isLoading ? 'flex' : 'none' }}
-          className="bg-[#FFFFFF]/95 border-2 border-[#000000] px-4 py-2 rounded-xl shadow-2xl items-center gap-3"
+          className="bg-[#04060B]/90 backdrop-blur-xl border border-white/20 px-5 py-3 rounded-2xl shadow-2xl flex-col items-center gap-2 ring-1 ring-white/10"
         >
-          <div className="w-4 h-4 border-2 border-[#000000] border-t-transparent rounded-full animate-spin" />
-          <span className="text-[11px] font-bold text-[#0F172A] font-mono whitespace-nowrap">
+          <img
+            src="/assets/brand/astra-logo-clean.webp"
+            alt="ASTRA"
+            className="h-6 w-24 object-contain animate-pulse"
+          />
+          <span className="text-[10px] font-bold text-white/80 font-mono tracking-widest whitespace-nowrap">
             STREAMING NASA 8K LROC & LOLA RELIEF…
           </span>
         </div>

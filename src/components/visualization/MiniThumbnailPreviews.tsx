@@ -84,47 +84,58 @@ function MiniTerrainCanvas({
 function MiniHorizonCanvas({
   sun,
   earth,
+  colorTexture,
 }: {
   sun: CelestialBodySkyState;
   earth: CelestialBodySkyState;
+  colorTexture: THREE.Texture | null;
 }) {
   const skyRadius = 20;
   const sunPos = useMemo(
-    () => astronomicalService.skyAnglesToVector3(sun.azimuthDeg, Math.max(-10, sun.elevationDeg), skyRadius),
+    () => astronomicalService.skyAnglesToVector3(sun.azimuthDeg, Math.max(4, sun.elevationDeg), skyRadius),
     [sun.azimuthDeg, sun.elevationDeg]
   );
   const earthPos = useMemo(
-    () => astronomicalService.skyAnglesToVector3(earth.azimuthDeg, Math.max(-10, earth.elevationDeg), skyRadius),
+    () => astronomicalService.skyAnglesToVector3(earth.azimuthDeg, Math.max(8, earth.elevationDeg), skyRadius),
     [earth.azimuthDeg, earth.elevationDeg]
   );
 
+  const camPos = useMemo<[number, number, number]>(() => {
+    const horiz = Math.hypot(sunPos[0], sunPos[2]) || 1;
+    return [(-sunPos[0] / horiz) * 5, 2.2, (-sunPos[2] / horiz) * 5];
+  }, [sunPos]);
+
   return (
     <Canvas
-      camera={{ position: [2.8, 1.6, 3.2], fov: 68 }}
+      camera={{ position: camPos, fov: 62 }}
       gl={{ antialias: false, powerPreference: 'low-power' }}
       dpr={1}
       className="w-full h-full pointer-events-none"
     >
       <Stars radius={50} depth={30} count={900} factor={3} saturation={0} fade speed={0.1} />
-      <ambientLight intensity={0.12} />
-      <directionalLight position={sunPos} intensity={2.4} color="#FFF9EB" />
+      <ambientLight intensity={0.22} />
+      <directionalLight position={sunPos} intensity={2.6} color="#FFF9EB" />
 
-      {/* Ground Horizon disc */}
+      {/* Textured Lunar Regolith Horizon Disc */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
         <circleGeometry args={[25, 32]} />
-        <meshStandardMaterial color="#1E293B" roughness={0.95} />
+        <meshStandardMaterial
+          map={colorTexture || undefined}
+          color={colorTexture ? '#B0B4BC' : '#334155'}
+          roughness={0.95}
+        />
       </mesh>
 
-      {/* Sun sphere */}
+      {/* Proportional Sun Sphere */}
       <mesh position={sunPos}>
-        <sphereGeometry args={[1.2, 16, 16]} />
-        <meshBasicMaterial color="#FFDE59" />
+        <sphereGeometry args={[0.85, 20, 20]} />
+        <meshBasicMaterial color="#FDE047" />
       </mesh>
 
-      {/* Earth sphere */}
+      {/* Proportional Earth Sphere (~2.3x Sun diameter) */}
       <mesh position={earthPos}>
-        <sphereGeometry args={[0.8, 16, 16]} />
-        <meshStandardMaterial color="#38BDF8" roughness={0.4} />
+        <sphereGeometry args={[1.95, 20, 20]} />
+        <meshStandardMaterial color="#38BDF8" roughness={0.4} metalness={0.15} />
       </mesh>
     </Canvas>
   );
@@ -174,7 +185,7 @@ export default function MiniThumbnailPreviews({
       id: 'horizon',
       title: 'Celestial Horizon',
       subtitle: 'Sun & Earth',
-      component: <MiniHorizonCanvas sun={sun} earth={earth} />,
+      component: <MiniHorizonCanvas sun={sun} earth={earth} colorTexture={colorTexture} />,
     },
   ];
 

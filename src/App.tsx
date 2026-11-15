@@ -41,12 +41,14 @@ import MissionTimelineBar from './components/workspace/MissionTimelineBar';
 import ConfigureModal from './components/workspace/ConfigureModal';
 import MultiSiteCompareCockpit from './components/workspace/MultiSiteCompareCockpit';
 import AstraAiCopilot from './components/workspace/AstraAiCopilot';
+import AstraWelcomeIntro from './components/workspace/AstraWelcomeIntro';
 
 // State & Services
 import { useMissionStore } from './stores/useMissionStore';
 import { lunarTerrainService } from './services/lunarTerrainService';
 import { astronomicalService } from './services/astronomicalService';
 import { missionAnalysisService } from './services/missionAnalysisService';
+import { skylineDeg } from './services/engineData';
 import type { LunarSite, AnalysisConfiguration } from './types';
 
 // Step 1 Abstraction: Focused Moon visualization with minimal selector
@@ -108,6 +110,7 @@ function MoonVisualizationFocus() {
   const [isConfigureOpen, setIsConfigureOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
+  const [introReplayKey, setIntroReplayKey] = useState(0);
 
   // Simulation playback state
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -137,9 +140,30 @@ function MoonVisualizationFocus() {
     return baseEpoch + activeHour * 3600 * 1000;
   }, [startDate, activeHour]);
 
+  // Sky positions: from the validated engine (current timeline point) whenever the site has engine data;
+  // the browser approximation is only kept for the fields the engine does not provide.
+  const skyline = useMemo(() => skylineDeg(selectedSite.id), [selectedSite, missionAnalysis]);
   const observation = useMemo(() => {
-    return astronomicalService.calculateSkyPositions(selectedSite, currentEpoch);
-  }, [selectedSite, currentEpoch]);
+    const base = astronomicalService.calculateSkyPositions(selectedSite, currentEpoch);
+    if (!skyline || !currentPoint) return base;
+    return {
+      ...base,
+      sun: {
+        ...base.sun,
+        azimuthDeg: currentPoint.sunAzimuthDeg,
+        elevationDeg: currentPoint.sunElevationDeg,
+        rawElevationDeg: currentPoint.sunElevationDeg,
+        isVisible: currentPoint.sunTerrainVisible,
+      },
+      earth: {
+        ...base.earth,
+        azimuthDeg: currentPoint.earthAzimuthDeg,
+        elevationDeg: currentPoint.earthElevationDeg,
+        rawElevationDeg: currentPoint.earthElevationDeg,
+        isVisible: currentPoint.earthTerrainVisible,
+      },
+    };
+  }, [selectedSite, currentEpoch, currentPoint, skyline]);
 
   // Animated mission playback loop: advances activeHour smoothly across totalHours
   useEffect(() => {
@@ -252,11 +276,18 @@ function MoonVisualizationFocus() {
 
   return (
     <div className="w-screen h-screen relative bg-[#04060B] overflow-hidden select-none">
+      {/* Apple "Hello"-Inspired Left-to-Right ASTRA Logo Writing Sequence on Load */}
+      <AstraWelcomeIntro key={introReplayKey} />
+
       <Suspense
         fallback={
           <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-white">
-            <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs font-mono font-bold tracking-wider">
+            <img
+              src="/assets/brand/astra-logo-clean.webp"
+              alt="ASTRA"
+              className="h-10 w-36 object-contain animate-pulse"
+            />
+            <span className="text-xs font-mono font-bold tracking-wider text-white/75">
               STREAMING NASA 3D ENVIRONMENT…
             </span>
           </div>
@@ -276,6 +307,7 @@ function MoonVisualizationFocus() {
             <Stars radius={80} depth={50} count={3500} factor={4} saturation={0} fade speed={0.2} />
             <NasaMoonGlobe
               mode="orbital"
+              sunDate={startDate}
               selectedSite={hasSiteBeenSelected ? (highlightedSite || selectedSite) : null}
               activeSite={hoveredSite || (isSiteFocused ? (highlightedSite || selectedSite) : null)}
               onActiveSiteScreenPos={setActiveSiteScreenData}
@@ -316,7 +348,7 @@ function MoonVisualizationFocus() {
           <div className="absolute inset-0" style={canvasLayerStyle('horizon')}>
           <Canvas
             frameloop={activeMode === 'horizon' ? 'always' : 'never'}
-            camera={{ position: [2.8, 1.6, 3.2], fov: 72 }}
+            camera={{ position: [-4.5, 2.3, 4.5], fov: 58 }}
             style={{ background: '#04060B' }}
             shadows
           >
@@ -324,8 +356,10 @@ function MoonVisualizationFocus() {
               site={selectedSite}
               sun={observation.sun}
               earth={observation.earth}
+              skylineDeg={skyline}
               viewMode="ground"
-              showHud={false}
+              showHud={true}
+              resetTrigger={resetTrigger}
             />
           </Canvas>
           </div>
@@ -337,8 +371,13 @@ function MoonVisualizationFocus() {
       {/* ================================================================== */}
       {!hasSiteBeenSelected && (
         <>
-          {/* ASTRA Brand Logo (Top-Left) */}
-          <div className="fixed top-4 left-4 z-40 flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-[#04060B]/85 backdrop-blur-xl border border-white/20 shadow-2xl select-none ring-1 ring-white/10">
+          {/* ASTRA Brand Logo (Top-Left, click to replay Apple-style ASTRA intro) */}
+          <button
+            type="button"
+            onClick={() => setIntroReplayKey((prev) => prev + 1)}
+            title="ASTRA — Replay Welcome Sequence"
+            className="fixed top-4 left-4 z-40 flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-[#04060B]/85 hover:bg-[#000000] backdrop-blur-xl border border-white/20 hover:border-white/40 shadow-2xl select-none ring-1 ring-white/10 cursor-pointer transition-all hover:scale-[1.02]"
+          >
             <div className="h-6 w-20 overflow-hidden flex items-center justify-center">
               <img
                 src="/assets/brand/astra-logo-clean.webp"
@@ -346,7 +385,7 @@ function MoonVisualizationFocus() {
                 className="w-full h-full object-contain"
               />
             </div>
-          </div>
+          </button>
 
           {/* Dribbble Google Moon Style Transparent Right Overview Panel & Connecting Line */}
           <RightSiteOverviewPanel

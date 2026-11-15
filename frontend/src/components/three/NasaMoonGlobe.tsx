@@ -822,10 +822,14 @@ export default function NasaMoonGlobe({
       <Html center pointerEvents="none">
         <div
           style={{ display: isLoading ? 'flex' : 'none' }}
-          className="bg-[#FFFFFF]/95 border-2 border-[#000000] px-4 py-2 rounded-xl shadow-2xl items-center gap-3"
+          className="bg-[#04060B]/90 backdrop-blur-xl border border-white/20 px-5 py-3 rounded-2xl shadow-2xl flex-col items-center gap-2 ring-1 ring-white/10"
         >
-          <div className="w-4 h-4 border-2 border-[#000000] border-t-transparent rounded-full animate-spin" />
-          <span className="text-[11px] font-bold text-[#0F172A] font-mono whitespace-nowrap">
+          <img
+            src="/assets/brand/astra-logo-clean.webp"
+            alt="ASTRA"
+            className="h-6 w-24 object-contain animate-pulse"
+          />
+          <span className="text-[10px] font-bold text-white/80 font-mono tracking-widest whitespace-nowrap">
             STREAMING NASA 8K LROC & LOLA RELIEF…
           </span>
         </div>

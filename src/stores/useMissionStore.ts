@@ -74,7 +74,7 @@ export interface MissionStoreState {
 
 const DEFAULT_START_DATE = '2026-11-20T12:00';
 const DEFAULT_DURATION_DAYS = 14;
-const DEFAULT_CANDIDATE_IDS = ['malapert-massif', 'shackleton-connecting-ridge', 'nobile-rim-1'];
+const DEFAULT_CANDIDATE_IDS = ['iau_mons_malapert', 'shackleton_rim_high', 'iau_mons_mouton'];
 
 const DEFAULT_CONFIG: AnalysisConfiguration = {
   samplingIntervalHours: 1,
@@ -112,7 +112,7 @@ export const useMissionStore = create<MissionStoreState>((set, get) => {
     DEFAULT_CONFIG
   );
 
-  const initialSelectedSite = SITES.find((s) => s.id === 'malapert-massif') || SITES[0];
+  const initialSelectedSite = SITES.find((s) => s.id === 'iau_mons_malapert') || SITES[0];
 
   return {
     missionName: 'CLPS Mission Nova-C / Artemis Polar Recon',

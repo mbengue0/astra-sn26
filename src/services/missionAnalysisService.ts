@@ -14,6 +14,7 @@ import {
 } from '../types';
 import { astronomicalService } from './astronomicalService';
 import { lunarTerrainService } from './lunarTerrainService';
+import { precomputedAnalysis } from './engineData';
 
 export class MissionAnalysisService {
   private analysisCache = new Map<string, SiteMissionAnalysis>();
@@ -45,6 +46,16 @@ export class MissionAnalysisService {
     const cacheKey = `${site.id}_${startDateIso}_${durationDays}d_${config.samplingIntervalHours}h_${config.terrainAware}`;
     if (this.analysisCache.has(cacheKey)) {
       return this.analysisCache.get(cacheKey)!;
+    }
+
+    // Catalogue sites with the terrain horizon: validated engine results (precomputed year, contract/precomputed/).
+    // The browser calculation below is only used for other cases (not validated against JPL Horizons / NASA maps).
+    if (config.terrainAware) {
+      const fromEngine = precomputedAnalysis(site, startDateIso, durationDays, scenarioId, config.samplingIntervalHours);
+      if (fromEngine) {
+        this.analysisCache.set(cacheKey, fromEngine);
+        return fromEngine;
+      }
     }
 
     // 1. Get 360-degree local terrain horizon mask
