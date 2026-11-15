@@ -4,6 +4,10 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "sync-engine-data": "node scripts/sync-engine-data.mjs",
+    "check-engine": "node scripts/check-engine-slice.mjs",
+    "predev": "node scripts/sync-engine-data.mjs",
+    "prebuild": "node scripts/sync-engine-data.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",

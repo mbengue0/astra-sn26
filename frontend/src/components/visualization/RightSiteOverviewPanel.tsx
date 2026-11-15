@@ -235,13 +235,13 @@ export default function RightSiteOverviewPanel({
                 Sunlight
               </span>
               <span className="text-xs font-mono font-bold text-[#E8A838]">
-                {site.sunVisibilityPct ?? 80}%
+                {site.sunVisibilityPct != null ? `${site.sunVisibilityPct}%` : '—'}
               </span>
             </div>
             <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden mt-1">
               <div
                 className="h-full bg-[#E8A838] rounded-full transition-all duration-500"
-                style={{ width: `${site.sunVisibilityPct ?? 80}%` }}
+                style={{ width: `${site.sunVisibilityPct ?? 0}%` }}
               />
             </div>
           </div>
@@ -253,13 +253,13 @@ export default function RightSiteOverviewPanel({
                 Earth Contact
               </span>
               <span className="text-xs font-mono font-bold text-[#38BDF8]">
-                {site.earthVisibilityPct ?? 65}%
+                {site.earthVisibilityPct != null ? `${site.earthVisibilityPct}%` : '—'}
               </span>
             </div>
             <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden mt-1">
               <div
                 className="h-full bg-[#38BDF8] rounded-full transition-all duration-500"
-                style={{ width: `${site.earthVisibilityPct ?? 65}%` }}
+                style={{ width: `${site.earthVisibilityPct ?? 0}%` }}
               />
             </div>
           </div>
