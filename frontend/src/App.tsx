@@ -47,6 +47,7 @@ import { useMissionStore } from './stores/useMissionStore';
 import { lunarTerrainService } from './services/lunarTerrainService';
 import { astronomicalService } from './services/astronomicalService';
 import { missionAnalysisService } from './services/missionAnalysisService';
+import { skylineDeg } from './services/engineData';
 import type { LunarSite, AnalysisConfiguration } from './types';
 
 // Step 1 Abstraction: Focused Moon visualization with minimal selector
@@ -137,9 +138,30 @@ function MoonVisualizationFocus() {
     return baseEpoch + activeHour * 3600 * 1000;
   }, [startDate, activeHour]);
 
+  // Sky positions: from the validated engine (current timeline point) whenever the site has engine data;
+  // the browser approximation is only kept for the fields the engine does not provide.
+  const skyline = useMemo(() => skylineDeg(selectedSite.id), [selectedSite, missionAnalysis]);
   const observation = useMemo(() => {
-    return astronomicalService.calculateSkyPositions(selectedSite, currentEpoch);
-  }, [selectedSite, currentEpoch]);
+    const base = astronomicalService.calculateSkyPositions(selectedSite, currentEpoch);
+    if (!skyline || !currentPoint) return base;
+    return {
+      ...base,
+      sun: {
+        ...base.sun,
+        azimuthDeg: currentPoint.sunAzimuthDeg,
+        elevationDeg: currentPoint.sunElevationDeg,
+        rawElevationDeg: currentPoint.sunElevationDeg,
+        isVisible: currentPoint.sunTerrainVisible,
+      },
+      earth: {
+        ...base.earth,
+        azimuthDeg: currentPoint.earthAzimuthDeg,
+        elevationDeg: currentPoint.earthElevationDeg,
+        rawElevationDeg: currentPoint.earthElevationDeg,
+        isVisible: currentPoint.earthTerrainVisible,
+      },
+    };
+  }, [selectedSite, currentEpoch, currentPoint, skyline]);
 
   // Animated mission playback loop: advances activeHour smoothly across totalHours
   useEffect(() => {
@@ -276,6 +298,7 @@ function MoonVisualizationFocus() {
             <Stars radius={80} depth={50} count={3500} factor={4} saturation={0} fade speed={0.2} />
             <NasaMoonGlobe
               mode="orbital"
+              sunDate={startDate}
               selectedSite={hasSiteBeenSelected ? (highlightedSite || selectedSite) : null}
               activeSite={hoveredSite || (isSiteFocused ? (highlightedSite || selectedSite) : null)}
               onActiveSiteScreenPos={setActiveSiteScreenData}
@@ -324,6 +347,7 @@ function MoonVisualizationFocus() {
               site={selectedSite}
               sun={observation.sun}
               earth={observation.earth}
+              skylineDeg={skyline}
               viewMode="ground"
               showHud={false}
             />

@@ -18,6 +18,7 @@ import {
 import { LunarSite } from '../../types';
 import { SITES, CATEGORIES, formatCoordinates } from '../../data/sites';
 import { lunarTerrainService } from '../../services/lunarTerrainService';
+import { computeCustomSite } from '../../services/engineData';
 import { formatElevation } from '../../utils/formatters';
 
 export interface MoonSearchNavigatorProps {
@@ -85,7 +86,7 @@ export default function MoonSearchNavigator({
   }, [query]);
 
   // Navigate to explicit coordinates
-  const handleNavigateCoordinates = (latVal?: number, lonVal?: number) => {
+  const handleNavigateCoordinates = async (latVal?: number, lonVal?: number) => {
     const lat = latVal !== undefined ? latVal : parseFloat(customLat);
     const lon = lonVal !== undefined ? lonVal : parseFloat(customLon);
 
@@ -117,6 +118,11 @@ export default function MoonSearchNavigator({
       )}.`,
     };
 
+    // Validated engine results for this point (whole precomputed year) when the engine API is available
+    setCoordError('Computing with the ASTRA-SN engine…');
+    const res = await computeCustomSite(customSite);
+    setCoordError(null);
+    if (!res.ok) customSite.description += ' (Engine API not used: ' + res.reason.replace(/\.$/, '') + '. Values are a browser estimate, not validated.)';
     onHighlightSite(customSite);
     setIsOpen(false);
   };

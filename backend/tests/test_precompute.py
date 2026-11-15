@@ -57,3 +57,45 @@ def test_precomputed_files_cover_the_catalogue_and_match_the_examples():
         year = json.load(open(pre / f"result_{sid}.json", encoding="utf-8"))
         assert year["times"][0] == index["startUtc"]
         assert slice_result(year, "2026-11-14T00:00:00Z", "2026-12-14T00:00:00Z") == contract_example(f"result_{sid}.json")
+
+
+def test_subsolar_point_agrees_with_site_sun_elevations():
+    """The sub-solar file (used to light the 3D globe) must agree with the validated site Sun elevations."""
+    import json
+    import math
+    from conftest import ROOT
+    pre = ROOT / "contract" / "precomputed"
+    sub = json.load(open(pre / "subsolar.json", encoding="utf-8"))
+    for sid in ("iau_mons_malapert", "shackleton_rim_high", "iau_mons_mouton"):
+        res = json.load(open(pre / f"result_{sid}.json", encoding="utf-8"))
+        site = next(s for s in json.load(open(pre / "index.json", encoding="utf-8"))["sites"] if s["id"] == sid)
+        la, lo = math.radians(site["latDeg"]), math.radians(site["lonDeg"])
+        up = (math.cos(la) * math.cos(lo), math.cos(la) * math.sin(lo), math.sin(la))
+        for h in range(0, len(sub["latDeg"]), 97):               # about 90 hours spread over the year
+            sla, slo = math.radians(sub["latDeg"][h]), math.radians(sub["lonDeg"][h])
+            s = (math.cos(sla) * math.cos(slo), math.cos(sla) * math.sin(slo), math.sin(sla))
+            el = math.degrees(math.asin(sum(a * b for a, b in zip(up, s))))
+            assert abs(el - res["sun"]["elevDeg"][2 * h]) < 0.01   # results use a 30-min step
+
+
+def test_drawn_skyline_is_the_one_used_for_visibility():
+    """The skyline drawn in the 3D horizon view (horizon_<id>.json) is the mask used for visible / hidden:
+    at every step, the skyline interpolated at the Sun / Earth azimuth equals the stored horizonDeg, and
+    'centre above that skyline' is exactly the engine's visibility (the windows)."""
+    import json
+    import numpy as np
+    from astra_engine.visibility import mask_at
+    from conftest import ROOT
+    pre = ROOT / "contract" / "precomputed"
+    for sid in ("shackleton_rim_high", "iau_mons_malapert", "iau_mons_mouton", "iau_haworth"):
+        res = json.load(open(pre / f"result_{sid}.json", encoding="utf-8"))
+        hz = json.load(open(pre / f"horizon_{sid}.json", encoding="utf-8"))
+        az, mask = np.arange(0, 360, hz["azStepDeg"]), np.array(hz["elevDeg"])
+        for body in ("sun", "earth"):
+            b = res[body]
+            drawn = mask_at(az, mask, np.array(b["azDeg"]))
+            # stored values are rounded to 0.001 deg (azimuth and skyline), hence the small tolerance
+            assert np.abs(drawn - np.array(b["horizonDeg"])).max() < 0.02
+            above = np.array(b["elevDeg"]) > np.array(b["horizonDeg"])
+            state = np.array(b["state"])
+            assert not np.any(above & (state == "hidden")) and not np.any(~above & (state == "visible"))
