@@ -7,13 +7,13 @@ Aerospace mission planning and candidate site evaluation console for the NASA CL
 ## 🚀 Capabilities
 
 - **Interactive 3D Moon Landing View**: 3D lunar globe with candidate landing markers, search navigation, custom coordinates, and Google Moon Dribbble-style site overview with connecting line.
-- **Local 3D Terrain View**: Real NASA LOLA LDEM_16 (16 px/°) surface topography (128×128 mesh · 32,768 polygons) with grazing solar illumination, touchdown beacon, and lander legs on the datum ($Y = 0$).
+- **Local 3D Terrain View**: Real NASA LOLA 80 m terrain (20 km × 20 km tile from the engine) for the 4 shown sites, lit from the true Sun direction, with touchdown beacon and lander on the datum ($Y = 0$).
 - **3D Celestial Horizon View**: 360° sky dome with dynamic Sun and Earth vectors, observer horizon ring, and azimuth/elevation axes.
 - **Vertical Left-Docked Celestial Playback**: Interactive vertical timeline with dual Gantt ribbons (Sunlight & Earth LOS), scrub track ($T+0\text{h}$ to $T+\text{totalHours}$), play/pause, speed multipliers ($1\times, 10\times, 60\times$), and step buttons ($\pm 1\text{h}, +24\text{h}$).
 - **Miniature 3D Square Viewport Switchers**: Bottom-centered 3D miniature preview thumbnails for 1-click toggling between Local Terrain and Celestial Horizon.
 - **Real-Time Telemetry HUD**: Retractable side panel with Sun/Earth azimuth & elevation, local terrain obstruction angles, visibility states (`ILLUMINATED` vs `OCCULTED`, `LINE-OF-SIGHT` vs `OCCULTED`), solar flux %, and validated full-mission metrics.
-- **Multi-Site Aerospace Trade Matrix Cockpit**: Side-by-side candidate comparison (e.g., Malapert Massif, Shackleton Ridge, Nobile Rim, Apollo 11) with dynamic Launch Slip Slider ($0\text{d}, +7\text{d}, +14\text{d}, +29.5\text{d}$) and instant metric recalculation.
-- **ASTRA Flight AI Copilot**: Context-aware mission assistant grounded in NASA LOLA DEM altimetry and JPL Horizons ephemerides with quick prompt chips.
+- **Multi-Site Aerospace Trade Matrix Cockpit**: Side-by-side candidate comparison (engine results) with dynamic Launch Slip Slider ($0\text{d}, +7\text{d}, +14\text{d}, +29.5\text{d}$) and instant metric recalculation.
+- **ASTRA Copilot**: Pre-written answers (chosen by keywords, not an AI model) filled in with the engine's numbers for the selected site, with quick prompt chips. Some fixed sentences are not accurate for this project; see `docs/scientific/limitations.md`.
 - **Standardized Backend JSON Contract (`schemaVersion: 1`)**: Built-in data adapter supporting export and synchronization with the backend API.
 
 ---
@@ -24,6 +24,12 @@ Aerospace mission planning and candidate site evaluation console for the NASA CL
 - **3D Graphics**: Three.js, React Three Fiber, React Three Drei
 - **Styling**: Tailwind CSS v4, Lucide Icons, JetBrains Mono & Inter typography
 - **State**: Zustand
+
+---
+
+## 🌐 Live app
+
+<https://astra-sn26.vercel.app/> (Vercel, project root `frontend/`, redeployed on every push to `main`). The engine API is not online, so custom coordinates there use the unvalidated browser estimate.
 
 ---
 
@@ -55,9 +61,9 @@ The screens use the **validated engine** of Pole 2 (`backend/`), not a calculati
 | Custom coordinates | engine API `POST /analysis` (whole year computed once, then cut locally) | ~5–10 s |
 
 - **Sites shown: 4** (`FEATURED_SITE_IDS` in `src/data/sites.ts`): Shackleton rim (high point), Mons Malapert, Mons Mouton, Haworth crater. The engine and the API keep all 16.
-- **Celestial horizon view** (accurate): camera at the observation point, the site's real terrain skyline from the engine (`horizon_<siteId>.json`, 360 values), Sun and Earth at the engine positions of the timeline instant and at their true angular size (Sun 0.27°, Earth 0.95° radius). A body below the ridge is hidden by the drawn terrain, exactly when the engine says "hidden" (test `test_drawn_skyline_is_the_one_used_for_visibility`). Angles on screen are true angles.
+- **Celestial horizon view**: the site's real terrain skyline from the engine (`horizon_<siteId>.json`, 360 values, drawn as is, including negative angles), and the Sun and Earth at the engine azimuth / elevation of the timeline instant. The skyline file is the one the engine uses for visibility (test `test_drawn_skyline_is_the_one_used_for_visibility`). Camera, sizes and lander are Pole 3's rendering choices; the telemetry gives the exact visible / hidden state.
 - **Local terrain view**: heights from the engine LOLA 80 m tile (20 km x 20 km, `contract/precomputed/terrain_<siteId>.bin`, `backend/scripts/export_terrain_tiles.py`); the existing light points from the engine Sun azimuth / elevation. Rendering is unchanged. Shadows only come from terrain inside the tile (an on-screen note says so); the telemetry gives the true Sun state.
-- **Globe lighting** follows the real Sun direction at the chosen date (sub-solar point from the engine, `contract/precomputed/subsolar.json`). The local terrain view still uses a fixed illustrative light.
+- **Globe lighting** follows the real Sun direction at the chosen date (sub-solar point from the engine, `contract/precomputed/subsolar.json`).
 - Code: `src/services/engineData.ts` (`sliceResult` is a port of `slice_result` in `backend/astra_engine/visibility.py`).
 - The site list `src/data/engineSites.json` is generated by `python backend/scripts/export_frontend_sites.py` — do not edit numbers by hand.
 - Check the TypeScript port against the validated files: `npm run check-engine` (all lines must say `true`).

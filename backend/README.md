@@ -44,8 +44,9 @@ for a deployed frontend. No free host without a credit card was found for it yet
 ASTRA_LDEM_PATH=<path/to/LDEM_80S_80MPP_ADJ.tiff> python -m pytest -v
 ```
 
-51 tests (under a minute): `/analysis` and `/horizon` return exactly `contract/examples/`, custom
-coordinates, cache, terrain coverage rule (checked against real missing pixels), invalid requests, CORS.
+61 tests (about a minute): `/analysis` and `/horizon` return exactly `contract/examples/`, custom
+coordinates, cache, terrain coverage rule (checked against real missing pixels), invalid requests, CORS,
+minute refinement, the precomputed year and `slice_result`, the 3D terrain tiles (orientation checked against the LDEM).
 Without `ASTRA_LDEM_PATH`, the terrain tests are skipped. Summary of the API work: `../docs/project/phase3_pole2.md`.
 
 ## Next steps (Pole 2)
@@ -56,7 +57,7 @@ Without `ASTRA_LDEM_PATH`, the terrain tests are skipped. Summary of the API wor
 - [x] Cache horizon masks in memory per (lat, lon, LDEM file, sensor height) — repeat request ~0.7 s instead of ~2.3 s
 - [x] `GET /horizon` (skyline, `horizon_<siteId>.json` format) and CORS for the local frontend (`ASTRA_CORS_ORIGINS`)
 - [x] Precomputed year for every catalogue site (`scripts/precompute.py` → `../contract/precomputed/`, `slice_result`)
-- [ ] Deploy the API publicly (terrain file on the server)
+- [ ] Deploy the API publicly (not done: no payment card in the team; the public app uses the precomputed year)
 - [x] Refine set/rise times to the minute around transitions (`tests/test_refinement.py`)
 - [x] Data-coverage check (`horizon.coverage`): outside the map → 422; terrain horizon only if the whole 150 km ray disc is inside the map (80 m map: about 85° S or closer to the pole, depending on longitude), otherwise 422 suggesting `horizon="flat"`
-- [ ] Choose the LDEM resolution per site (see `../data/README.md`)
+- [x] LDEM resolution: 80 m for the horizon and the 3D terrain tiles (`scripts/export_terrain_tiles.py`); 40 m checked, see `../data/README.md`

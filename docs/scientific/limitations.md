@@ -34,6 +34,23 @@
 - Power generation, thermal conditions, radio link budget, landing hazards and slopes.
 - Atmospheric effects do not exist on the Moon; light-time effects are small and included in the error above.
 
+## Web app
+
+- **Validated numbers only inside the precomputed year** (2026-11-14 → 2027-11-14) with the terrain horizon on
+  (the default). Outside that year, or with "Terrain-Aware" turned off in Configure, the app falls back to an
+  older calculation in the browser that is not validated.
+- **Custom coordinates** need the engine API, which runs locally with Docker; the public site has no API, so
+  custom coordinates there use the unvalidated browser estimate (the site card says so).
+- **Local Terrain view:** real LOLA 80 m tiles exist for the 4 shown sites only. Shadows are drawn only from
+  terrain inside the 20 km tile (a note on screen says so); the telemetry gives the true Sun state. At a grazing
+  Sun about half of the terrain faces away from the Sun (Mons Malapert: 49 % at 4°), so the view is mostly dark
+  patches: this is the real geometry.
+- **"ASTRA Copilot"** is pre-written text filled with the engine's numbers, not an AI model. Its numbers come
+  from the engine, but some fixed sentences are not accurate for ASTRA-SN: it describes the terrain as
+  "LOLA LDEM_16, ~1.89 km/px" (the engine uses the 80 m map) and the positions as coming from JPL Horizons (the
+  engine uses astronomy-engine, checked against Horizons), and it gives battery, thermal and radio advice
+  (temperatures, battery sizing, memory buffer) that the engine does not model.
+
 ## What users should not infer
 - "Sun visible" ≠ power available. "Earth visible" ≠ radio contact available.
 - No site is declared "best": results show trade-offs, people decide.
