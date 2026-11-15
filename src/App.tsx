@@ -77,6 +77,23 @@ function MoonVisualizationFocus() {
   const [activeMode, setActiveMode] = useState<MoonViewMode>('global');
   const [resetTrigger, setResetTrigger] = useState<number>(0);
 
+  // Lazily mount each 3D view the first time it is opened, then keep it alive
+  const [mountedModes, setMountedModes] = useState<Record<MoonViewMode, boolean>>({
+    global: true,
+    terrain: false,
+    horizon: false,
+  });
+  useEffect(() => {
+    if (!mountedModes[activeMode]) {
+      setMountedModes((prev) => ({ ...prev, [activeMode]: true }));
+    }
+  }, [activeMode, mountedModes]);
+
+  const canvasLayerStyle = (mode: MoonViewMode): React.CSSProperties =>
+    activeMode === mode
+      ? { visibility: 'visible', pointerEvents: 'auto', zIndex: 1 }
+      : { visibility: 'hidden', pointerEvents: 'none', zIndex: 0 };
+
   // Search-highlighted target site (keeps global Moon view while displaying search drawer)
   const [highlightedSite, setHighlightedSite] = useState<LunarSite | null>(null);
 
@@ -245,9 +262,17 @@ function MoonVisualizationFocus() {
           </div>
         }
       >
+        {/* Canvases stay mounted once opened (hidden + paused when inactive).
+            Destroying them on every view switch caused a React unmount race
+            ("removeChild ... not a child of this node") from drei <Html> labels. */}
         {/* Mode 1: Global Moon View */}
-        {activeMode === 'global' && (
-          <Canvas camera={{ position: [5.48, -3.90, -0.97], fov: 42 }} style={{ background: '#04060B' }} shadows>
+        <div className="absolute inset-0" style={canvasLayerStyle('global')}>
+          <Canvas
+            frameloop={activeMode === 'global' ? 'always' : 'never'}
+            camera={{ position: [5.48, -3.90, -0.97], fov: 42 }}
+            style={{ background: '#04060B' }}
+            shadows
+          >
             <Stars radius={80} depth={50} count={3500} factor={4} saturation={0} fade speed={0.2} />
             <NasaMoonGlobe
               mode="orbital"
@@ -262,11 +287,17 @@ function MoonVisualizationFocus() {
               resetTrigger={resetTrigger}
             />
           </Canvas>
-        )}
+        </div>
 
         {/* Mode 2: Local 3D Terrain View (LOLA DEM 16 px/° with grazing solar illumination) */}
-        {activeMode === 'terrain' && (
-          <Canvas camera={{ position: [0, 8, 22], fov: 50 }} style={{ background: '#04060B' }} shadows>
+        {mountedModes.terrain && (
+          <div className="absolute inset-0" style={canvasLayerStyle('terrain')}>
+          <Canvas
+            frameloop={activeMode === 'terrain' ? 'always' : 'never'}
+            camera={{ position: [0, 8, 22], fov: 50 }}
+            style={{ background: '#04060B' }}
+            shadows
+          >
             <Stars radius={80} depth={50} count={3500} factor={4} saturation={0} fade speed={0.2} />
             <NasaMoonGlobe
               mode="surface"
@@ -277,11 +308,14 @@ function MoonVisualizationFocus() {
               isFocused={isSiteFocused}
             />
           </Canvas>
+          </div>
         )}
 
         {/* Mode 3: Celestial Horizon View with Animated Sun & Earth Sky Movement */}
-        {activeMode === 'horizon' && (
+        {mountedModes.horizon && (
+          <div className="absolute inset-0" style={canvasLayerStyle('horizon')}>
           <Canvas
+            frameloop={activeMode === 'horizon' ? 'always' : 'never'}
             camera={{ position: [2.8, 1.6, 3.2], fov: 72 }}
             style={{ background: '#04060B' }}
             shadows
@@ -294,6 +328,7 @@ function MoonVisualizationFocus() {
               showHud={false}
             />
           </Canvas>
+          </div>
         )}
       </Suspense>
 

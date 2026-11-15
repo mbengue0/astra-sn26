@@ -778,17 +778,18 @@ export default function NasaMoonGlobe({
       {/* Minimal space vacuum ambient light */}
       <ambientLight intensity={mode === 'surface' ? 0.04 : 0.06} />
 
-      {/* Loading HUD overlay */}
-      {isLoading && (
-        <Html center>
-          <div className="bg-[#FFFFFF]/95 border-2 border-[#000000] px-4 py-2 rounded-xl shadow-2xl flex items-center gap-3">
-            <div className="w-4 h-4 border-2 border-[#000000] border-t-transparent rounded-full animate-spin" />
-            <span className="text-[11px] font-bold text-[#0F172A] font-mono">
-              STREAMING NASA 8K LROC & LOLA RELIEF…
-            </span>
-          </div>
-        </Html>
-      )}
+      {/* Loading HUD overlay (kept mounted to prevent React 19 root unmount race) */}
+      <Html center pointerEvents="none">
+        <div
+          style={{ display: isLoading ? 'flex' : 'none' }}
+          className="bg-[#FFFFFF]/95 border-2 border-[#000000] px-4 py-2 rounded-xl shadow-2xl items-center gap-3"
+        >
+          <div className="w-4 h-4 border-2 border-[#000000] border-t-transparent rounded-full animate-spin" />
+          <span className="text-[11px] font-bold text-[#0F172A] font-mono whitespace-nowrap">
+            STREAMING NASA 8K LROC & LOLA RELIEF…
+          </span>
+        </div>
+      </Html>
 
       {mode === 'orbital' && (
         <SiteProjector

@@ -123,7 +123,7 @@ export default function TelemetryHud({ analysis, currentPoint }: TelemetryHudPro
 
           <div className="flex justify-between items-center text-[10px] text-white/60 pt-0.5">
             <span>Terrain Obstruction:</span>
-            <span className="font-mono text-white/80">+{currentPoint.localHorizonAtSunDeg.toFixed(2)}°</span>
+            <span className="font-mono text-white/80">{currentPoint.localHorizonAtSunDeg >= 0 ? "+" : ""}{currentPoint.localHorizonAtSunDeg.toFixed(2)}°</span>
           </div>
           <div className="flex justify-between items-center text-[10px] text-white/60">
             <span>Estimated Flux:</span>
@@ -167,7 +167,7 @@ export default function TelemetryHud({ analysis, currentPoint }: TelemetryHudPro
 
           <div className="flex justify-between items-center text-[10px] text-white/60 pt-0.5">
             <span>Terrain Obstruction:</span>
-            <span className="font-mono text-white/80">+{currentPoint.localHorizonAtEarthDeg.toFixed(2)}°</span>
+            <span className="font-mono text-white/80">{currentPoint.localHorizonAtEarthDeg >= 0 ? "+" : ""}{currentPoint.localHorizonAtEarthDeg.toFixed(2)}°</span>
           </div>
         </div>
 
