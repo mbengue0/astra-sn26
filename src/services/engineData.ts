@@ -312,3 +312,32 @@ export async function computeCustomSite(site: LunarSite): Promise<CustomResult> 
     return { ok: false, reason: `engine API unreachable (${err})` };
   }
 }
+
+// ---------------------------------------------------------------------------- local terrain tiles (3D view)
+export interface TerrainTile { size: number; stepM: number; groundElevationM: number; minM: number; maxM: number; heights: Float32Array }
+const tiles = new Map<string, Promise<TerrainTile | null>>();
+
+/**
+ * Real LOLA terrain around a site (contract/precomputed/terrain_<siteId>.bin): 20 km x 20 km at 80 m,
+ * heights in metres relative to the site ground (Moon curvature included), row 0 = north edge,
+ * col 0 = west edge. Null when the site has no tile (the view then keeps its previous terrain).
+ */
+export function loadTerrainTile(siteId: string): Promise<TerrainTile | null> {
+  if (!tiles.has(siteId)) {
+    tiles.set(siteId, (async () => {
+      try {
+        const meta = await fetch(`${DATA_URL}terrain_${siteId}.json`);
+        if (!meta.ok) return null;
+        const m = await meta.json();
+        const bin = await fetch(`${DATA_URL}terrain_${siteId}.bin`);
+        if (!bin.ok) return null;
+        const heights = new Float32Array(await bin.arrayBuffer());
+        if (heights.length !== m.size * m.size) return null;
+        return { size: m.size, stepM: m.stepM, groundElevationM: m.groundElevationM, minM: m.minM, maxM: m.maxM, heights };
+      } catch {
+        return null;
+      }
+    })());
+  }
+  return tiles.get(siteId)!;
+}

@@ -33,8 +33,9 @@ export default function ImmersiveLunarSky({
   skylineDeg,
   resetTrigger = 0,
 }: ImmersiveLunarSkyProps) {
-  const { camera } = useThree();
+  const { camera, gl } = useThree();
   const controlsRef = useRef<any>(null);
+  const targetFovRef = useRef<number>(58);
 
   // Terrain perimeter radius vs celestial dome radius (celestial bodies sit outside terrain rim
   // so they occult naturally behind the 3D lunar horizon ridge without geometry intersection)
@@ -51,9 +52,16 @@ export default function ImmersiveLunarSky({
   }, [earth.azimuthDeg, earth.elevationDeg]);
 
   // Set initial camera framing centered on the lunar outpost (0, 1.0, 0) so 360° rotation
-  // always orbits smoothly around the landing site rather than swinging off-center
+  // and zooming work naturally across the entire scene
   useEffect(() => {
     if (!controlsRef.current) return;
+
+    if ((camera as THREE.PerspectiveCamera).isPerspectiveCamera) {
+      const persp = camera as THREE.PerspectiveCamera;
+      persp.fov = 58;
+      targetFovRef.current = 58;
+      persp.updateProjectionMatrix();
+    }
 
     if (viewMode === 'ground') {
       // Aim across the central lander toward the Sun (or Earth if Sun is occulted)
@@ -62,20 +70,54 @@ export default function ImmersiveLunarSky({
       const dirX = primaryTarget[0] / horizLen;
       const dirZ = primaryTarget[2] / horizLen;
 
-      // Position camera 6.2m behind the lander looking across the lander toward the horizon
-      camera.position.set(-dirX * 6.2, 2.3, -dirZ * 6.2);
+      // Position camera 8.5m behind the lander looking across the lander toward the horizon
+      camera.position.set(-dirX * 8.5, 2.8, -dirZ * 8.5);
       controlsRef.current.target.set(0, 1.15, 0);
-      controlsRef.current.minDistance = 2.2;
-      controlsRef.current.maxDistance = 20;
+      controlsRef.current.minDistance = 0.6;
+      controlsRef.current.maxDistance = 65;
     } else {
       // Orbital overview looking down at the lunar outpost and sky horizon
       camera.position.set(0, 14, 26);
       controlsRef.current.target.set(0, 1.2, 0);
-      controlsRef.current.minDistance = 5;
-      controlsRef.current.maxDistance = 60;
+      controlsRef.current.minDistance = 0.6;
+      controlsRef.current.maxDistance = 65;
     }
     controlsRef.current.update();
   }, [viewMode, site.id, resetTrigger]);
+
+  // Optical FOV zoom extension: when zooming in close (< 4m from target), smoothly narrow FOV
+  // down to 12° so the user can zoom right into the Sun, Earth, or horizon ridge; when zooming out,
+  // restore FOV to 58° while OrbitControls dollies out up to 65m.
+  useEffect(() => {
+    const domElem = gl.domElement;
+    if (!domElem) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (!controlsRef.current || !(camera as THREE.PerspectiveCamera).isPerspectiveCamera) return;
+      const dist = camera.position.distanceTo(controlsRef.current.target);
+
+      if (e.deltaY < 0 && dist <= 4.0) {
+        // Zooming in close -> optical zoom toward horizon/Sun/Earth
+        targetFovRef.current = Math.max(12, targetFovRef.current - 3.2);
+      } else if (e.deltaY > 0 && targetFovRef.current < 58) {
+        // Zooming back out -> restore wide-angle FOV first
+        targetFovRef.current = Math.min(58, targetFovRef.current + 4.0);
+      }
+    };
+
+    domElem.addEventListener('wheel', handleWheel, { passive: true });
+    return () => domElem.removeEventListener('wheel', handleWheel);
+  }, [gl, camera]);
+
+  useFrame(() => {
+    if ((camera as THREE.PerspectiveCamera).isPerspectiveCamera) {
+      const persp = camera as THREE.PerspectiveCamera;
+      if (Math.abs(persp.fov - targetFovRef.current) > 0.05) {
+        persp.fov = THREE.MathUtils.lerp(persp.fov, targetFovRef.current, 0.14);
+        persp.updateProjectionMatrix();
+      }
+    }
+  });
 
   return (
     <group>
@@ -147,15 +189,17 @@ export default function ImmersiveLunarSky({
         scale={2.65}
       />
 
-      {/* Smooth 360° Camera Controls centered on the outpost with strict ground-plane clamping */}
+      {/* Smooth 360° Camera Controls with full zoom range (0.6m to 65m) and ground-plane clamping */}
       <OrbitControls
         ref={controlsRef}
-        enablePan={false}
+        enablePan={true}
         enableZoom={true}
         enableDamping={true}
         dampingFactor={0.06}
         rotateSpeed={0.65}
-        zoomSpeed={0.8}
+        zoomSpeed={1.2}
+        minDistance={0.6}
+        maxDistance={65}
         maxPolarAngle={Math.PI / 2 - 0.06}
         minPolarAngle={0.08}
       />
@@ -220,15 +264,14 @@ function CrateredLunarTerrain({
           const frac = azDeg - Math.floor(azDeg);
           const elevDeg = skylineDeg[idx0] * (1 - frac) + skylineDeg[idx1] * frac;
 
-          // Convert skyline elevation angle to physical ridge height at perimeter radius
-          const targetRimHeight = Math.max(
-            0.15,
-            radius * Math.tan(( Math.max(0.3, elevDeg) * Math.PI) / 180)
-          );
+          // Convert skyline elevation angle to physical ridge height at perimeter radius.
+          // True engine value, including negative angles (a summit sees below the horizontal plane).
+          const targetRimHeight = radius * Math.tan((elevDeg * Math.PI) / 180);
           const radialBlend = Math.min(1, Math.max(0, (distFromCenter - 3.6) / (radius - 3.6)));
           const smoothProfile = radialBlend * radialBlend * (3 - 2 * radialBlend);
           const microRelief = Math.sin(x * 0.75) * Math.cos(z * 0.75) * 0.12;
-          height = smoothProfile * targetRimHeight + microRelief * radialBlend;
+          // decorative micro-relief fades out toward the rim so the rim stays exactly on the engine skyline
+          height = smoothProfile * targetRimHeight + microRelief * radialBlend * (1 - radialBlend);
         } else {
           // Procedural polar crater rim fallback
           const angle = Math.atan2(z, x);
@@ -254,9 +297,9 @@ function CrateredLunarTerrain({
     if (!hasEngineSkyline || !skylineDeg) return null;
     const pts: THREE.Vector3[] = [];
     for (let a = 0; a <= 360; a++) {
-      const el = Math.max(0, skylineDeg[a % 360]);
+      const el = skylineDeg[a % 360];                 // true engine value (can be negative)
       const v = astronomicalService.skyAnglesToVector3(a, el, radius * 0.98);
-      pts.push(new THREE.Vector3(v[0], v[1] + 0.08, v[2]));
+      pts.push(new THREE.Vector3(v[0], v[1], v[2]));
     }
     return new THREE.BufferGeometry().setFromPoints(pts);
   }, [radius, hasEngineSkyline, skylineDeg]);

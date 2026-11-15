@@ -181,13 +181,11 @@ export default function AstraAiCopilot({
         }`}
         title={isOpen ? "Close ASTRA AI Copilot" : "Open ASTRA Flight AI Copilot"}
       >
-        <div className="relative">
-          <BrainCircuit size={18} className={isOpen ? "text-black" : "text-[#38BDF8]"} />
-          <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#38BDF8] animate-ping" />
-          <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#38BDF8]" />
-        </div>
-        {!isOpen && (
-          <div className="flex items-center gap-1.5 font-sans">
+        {isOpen ? (
+          <X size={16} className="text-black" />
+        ) : (
+          <div className="flex items-center gap-2 font-sans">
+            <span className="w-2 h-2 rounded-full bg-[#38BDF8] shrink-0" />
             <span className="text-xs font-bold tracking-wide">ASTRA Copilot</span>
             <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-white/15 text-white/90 font-bold">
               AI
@@ -202,9 +200,6 @@ export default function AstraAiCopilot({
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/10 bg-[#04060B]">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-[#38BDF8]">
-                <BrainCircuit size={16} />
-              </div>
               <div>
                 <div className="flex items-center gap-1.5">
                   <h3 className="text-xs font-bold tracking-wide">ASTRA Flight AI Copilot</h3>
@@ -277,7 +272,7 @@ export default function AstraAiCopilot({
                         : 'bg-[#000000] border border-white/30 text-white'
                     }`}
                   >
-                    {isAssistant ? <Bot size={13} /> : <span className="text-[10px] font-bold">U</span>}
+                    <span className="text-[10px] font-bold font-mono">{isAssistant ? 'AI' : 'U'}</span>
                   </div>
 
                   <div className={`space-y-1 max-w-[85%] ${isAssistant ? 'text-left' : 'text-right'}`}>
