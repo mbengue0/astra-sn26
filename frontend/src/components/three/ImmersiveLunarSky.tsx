@@ -220,15 +220,14 @@ function CrateredLunarTerrain({
           const frac = azDeg - Math.floor(azDeg);
           const elevDeg = skylineDeg[idx0] * (1 - frac) + skylineDeg[idx1] * frac;
 
-          // Convert skyline elevation angle to physical ridge height at perimeter radius
-          const targetRimHeight = Math.max(
-            0.15,
-            radius * Math.tan(( Math.max(0.3, elevDeg) * Math.PI) / 180)
-          );
+          // Convert skyline elevation angle to physical ridge height at perimeter radius.
+          // True engine value, including negative angles (a summit sees below the horizontal plane).
+          const targetRimHeight = radius * Math.tan((elevDeg * Math.PI) / 180);
           const radialBlend = Math.min(1, Math.max(0, (distFromCenter - 3.6) / (radius - 3.6)));
           const smoothProfile = radialBlend * radialBlend * (3 - 2 * radialBlend);
           const microRelief = Math.sin(x * 0.75) * Math.cos(z * 0.75) * 0.12;
-          height = smoothProfile * targetRimHeight + microRelief * radialBlend;
+          // decorative micro-relief fades out toward the rim so the rim stays exactly on the engine skyline
+          height = smoothProfile * targetRimHeight + microRelief * radialBlend * (1 - radialBlend);
         } else {
           // Procedural polar crater rim fallback
           const angle = Math.atan2(z, x);
@@ -254,9 +253,9 @@ function CrateredLunarTerrain({
     if (!hasEngineSkyline || !skylineDeg) return null;
     const pts: THREE.Vector3[] = [];
     for (let a = 0; a <= 360; a++) {
-      const el = Math.max(0, skylineDeg[a % 360]);
+      const el = skylineDeg[a % 360];                 // true engine value (can be negative)
       const v = astronomicalService.skyAnglesToVector3(a, el, radius * 0.98);
-      pts.push(new THREE.Vector3(v[0], v[1] + 0.08, v[2]));
+      pts.push(new THREE.Vector3(v[0], v[1], v[2]));
     }
     return new THREE.BufferGeometry().setFromPoints(pts);
   }, [radius, hasEngineSkyline, skylineDeg]);
