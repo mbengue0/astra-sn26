@@ -15,10 +15,13 @@ First written on the morning of 2026-11-14 (D0), updated after the Phase 3 API w
 | Globe lighting | **Done** | lit from the engine sub-solar point (`subsolar.json`) |
 | Celestial Horizon view | **Done (data)** | true engine skyline and engine Sun / Earth positions; Pole 3 rendering kept |
 | Local Terrain 3D view | **Done (data)** | real LOLA 80 m tile (20 × 20 km) for the 4 featured sites, light from the engine Sun direction; shadows from terrain beyond 10 km are not drawn (a note says so) |
-| Site Explorer mission metrics | **Not engine-based** | still uses `frontend/src/data/solar-data.ts` (approximate ephemeris) |
+| Compare sites (launch slips) | **Connected to the engine** | `MultiSiteCompareCockpit`, same engine year |
+| ASTRA Copilot | **Not AI, partly inaccurate text** | pre-written answers filled with engine numbers; some fixed sentences are wrong for this project (see `docs/scientific/limitations.md`) |
+| Older pages (Site Explorer, Simulator, AI Advisor…) | Not shown | still in the code but not displayed (`SHOW_MOON_VISUALIZATION_ONLY = true`); Site Explorer would use approximate numbers (`solar-data.ts`) |
+| Duplicate app at the repository root (`src/`, `public/`, `package.json`) | Not used | earlier copy, not engine-based, not deployed |
 | Periods outside the precomputed year | Fallback | the app falls back to its own browser calculation, which is not validated |
 | Docker image (API) | **Done** | LOLA file downloaded from NASA PGDA at build with a size check; same answers as the contract; 1 year ≈ 5 s |
-| Public deployment | **Partial** | the frontend needs no server (static files); the API has no public host (no payment card in the team), it runs locally with Docker for the demo |
+| Public deployment | **Done (app)** | live app: <https://astra-sn26.vercel.app/> (Vercel, static files, project root `frontend/`, redeployed on every push to `main`). The API has no public host (no payment card in the team): custom coordinates work only with the local Docker API |
 
 ## Automated tests
 
@@ -42,7 +45,7 @@ NASA illumination maps (validation). See [`../../data/README.md`](../../data/REA
   geometry, not a rendering error.
 
 ## Priority of remaining work
-1. P0 — Site Explorer metrics from the engine (last screen with approximate numbers).
+1. P1 — ASTRA Copilot: correct its fixed text (data sources, advice not modelled) or label it as a guide.
 2. P1 — Public API host (needs a payment card or a free host with enough CPU).
 3. P1 — Pole 1: Earth-visibility offset.
 4. P2 — Finer DEMs (20 m / 10 m), terrain tiles for more sites.

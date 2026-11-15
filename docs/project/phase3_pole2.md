@@ -81,7 +81,9 @@ Interactive documentation: http://127.0.0.1:8000/docs. For a deployed frontend, 
 
 ## Not done (next phases)
 
-- **Public deployment of the API** (required for the submission) — the 189 MB terrain file must be on the server.
+- **Public deployment of the API** — not done (no payment card in the team). The public app
+  (<https://astra-sn26.vercel.app/>) uses the precomputed year instead; the API runs locally with Docker
+  (decision 12 in [`decisions_log.md`](decisions_log.md)).
 - ~~Set/rise times to the minute~~: done after Phase 3 (see `../scientific/test_results.md`, section 4).
 - Earth horizon check +2 to +6 points vs NASA maps — open question (Pole 1).
 - Pole 3 to confirm the new value `siteId: "custom"` in the contract.

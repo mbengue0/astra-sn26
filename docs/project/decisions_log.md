@@ -9,7 +9,10 @@
 | 5 | 2026-11-14 | Keep astronomy-engine for ephemerides; JPL Horizons as independent reference (SPICE not introduced) | already validated at 15″; plan says no new engine without a clear reason | proposed (Pole 2) |
 | 6 | 2026-11-14 | One repository; engine/frontend exchange the JSON contract in `contract/` | lets poles work in parallel | agreed |
 | 7 | 2026-11-14 | No overall "best site" score | trade-offs, not verdicts | agreed |
-| 8 | — | Frontend stack and whether to build on any existing code | to decide by the team | **open** |
-| 9 | — | DEM resolution per use (horizon, 3D view) | to decide after tests | **open** |
+| 8 | 2026-11-15 | Frontend: Pole 3's React + Three.js app (`frontend/`), connected to the engine; no code copied from other teams' repositories | one app, numbers from the validated engine | agreed |
+| 9 | 2026-11-15 | DEM: LOLA 80 m for the horizon and the 3D terrain tiles; 40 m checked (agrees), 20 m / 10 m not used | 80 m validated against NASA maps and fast enough | agreed |
 | 10 | 2026-11-15 | The web app shows 4 sites: Shackleton rim (high point), Mons Malapert, Mons Mouton, Haworth crater; the engine/API keep 16 | readable globe, clear contrasts (best Sun, permanent Earth view, second massif, permanent shadow) | agreed (Pole 2) |
 | 11 | 2026-11-15 | 3D globe lit from the real Sun direction (engine sub-solar point) | the previous fixed light made polar sites look like they were in the night side | agreed (Pole 2) |
+| 12 | 2026-11-14 | Public app = static precomputed files; the API runs locally (Docker) | no payment card in the team for an API host; the app stays instant | agreed |
+| 13 | 2026-11-15 | Engine data in the views, Pole 3's rendering unchanged (Celestial Horizon, Local Terrain) | correct numbers without changing the agreed look and behaviour | agreed |
+| 14 | 2026-11-15 | App hosted on Vercel (free plan, project root `frontend/`), <https://astra-sn26.vercel.app/> | free, no card, redeploys on every push to `main` | done |
