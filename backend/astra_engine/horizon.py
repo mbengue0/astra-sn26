@@ -124,3 +124,27 @@ def coverage(ds, lat_deg, lon_deg, d_max_m=150_000.0):
         on_map = bool(np.isfinite(elevation_at(dem, T, x0, y0)))
     return {"onMap": on_map, "edgeDistanceKm": round(edge_m / 1000.0, 1),
             "requiredKm": d_max_m / 1000.0, "complete": on_map and edge_m >= d_max_m}
+
+
+def local_terrain_tile(ds, lat_deg, lon_deg, half_size_m=10_000.0, step_m=None):
+    """Square of terrain around a site in the site's local east / north frame (for the 3D terrain view).
+
+    Returns dict(heights, eastM, northM, stepM, groundM): heights[row, col] in metres relative to the site
+    ground, row 0 = north edge (rows go south), col 0 = west edge (cols go east). The Moon's curvature is
+    included (drop d^2 / 2R), so the tile is the terrain as seen from the site's tangent plane.
+    Same sampling as the horizon rays (bilinear interpolation of the LDEM).
+    """
+    step = step_m or abs(ds.transform.a)
+    x0, y0, north, east = local_axes(ds, lat_deg, lon_deg)
+    dem, T = read_window(ds, x0, y0, half_size_m * 1.5)
+    ground = elevation_at(dem, T, x0, y0)
+    n = int(round(2 * half_size_m / step)) + 1
+    off = (np.arange(n) - (n - 1) / 2) * step
+    E, N = np.meshgrid(off, -off)                    # rows: north -> south, cols: west -> east
+    X = x0 + E * east[0] + N * north[0]
+    Y = y0 + E * east[1] + N * north[1]
+    col, row = ~T * (X, Y)
+    h = map_coordinates(dem, [row.ravel() - 0.5, col.ravel() - 0.5], order=1,
+                        mode="constant", cval=np.nan).reshape(X.shape)
+    drop = (E ** 2 + N ** 2) / (2 * R_MOON_KM * 1000.0)
+    return {"heights": h - ground - drop, "eastM": off, "northM": -off, "stepM": step, "groundM": ground}

@@ -1,0 +1,13 @@
+{
+ "schemaVersion": 1,
+ "siteId": "iau_haworth",
+ "size": 251,
+ "stepM": 80.0,
+ "halfSizeM": 10000.0,
+ "groundElevationM": -3312.7,
+ "minM": -735.0,
+ "maxM": 1569.1,
+ "layout": "float32 little-endian, row 0 = north edge (rows go south), col 0 = west edge (cols go east)",
+ "heights": "metres relative to the site ground, Moon curvature included",
+ "source": "NASA PGDA LOLA LDEM_80S_80MPP_ADJ (Barker et al. 2023)"
+}
