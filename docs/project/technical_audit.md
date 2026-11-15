@@ -18,7 +18,7 @@ First written on the morning of 2026-11-14 (D0), updated after the Phase 3 API w
 | Site Explorer mission metrics | **Not engine-based** | still uses `frontend/src/data/solar-data.ts` (approximate ephemeris) |
 | Periods outside the precomputed year | Fallback | the app falls back to its own browser calculation, which is not validated |
 | Docker image (API) | **Done** | LOLA file downloaded from NASA PGDA at build with a size check; same answers as the contract; 1 year ≈ 5 s |
-| Public deployment | **Partial** | the frontend needs no server (static files); the API has no public host (no payment card in the team), it runs locally with Docker for the demo |
+| Public deployment | **Done (app)** | live app: <https://astra-sn26.vercel.app/> (Vercel, static files, project root `frontend/`, redeployed on every push to `main`). The API has no public host (no payment card in the team): custom coordinates work only with the local Docker API |
 
 ## Automated tests
 
