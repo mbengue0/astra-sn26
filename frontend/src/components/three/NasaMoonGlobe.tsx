@@ -13,7 +13,7 @@ import type { LunarSite } from '../../types';
 import { SITES, CATEGORIES, formatCoordinates } from '../../data/sites';
 import { lunarTerrainService, LocalTerrainData } from '../../services/lunarTerrainService';
 import { formatElevation } from '../../utils/formatters';
-import { subsolarPoint } from '../../services/engineData';
+import { subsolarPoint, loadTerrainTile, TerrainTile } from '../../services/engineData';
 
 // Convert lat/lon into 3D Cartesian coordinates on sphere
 export function latLonToSphere(lat: number, lon: number, radius: number): [number, number, number] {
@@ -668,10 +668,54 @@ function RealSunLight({ date, moonGroupRef }: { date?: string; moonGroupRef: Rea
   );
 }
 
+/**
+ * Engine LOLA tile -> the same mesh data the view already uses (only the heights change):
+ * x = east (km), y = up (km, true scale), z = south (km), 251 x 251 points every 80 m.
+ */
+function tileToTerrainData(t: TerrainTile): LocalTerrainData {
+  const n = t.size, c = (n - 1) / 2, stepKm = t.stepM / 1000;
+  const positions = new Float32Array(n * n * 3);
+  const uvs = new Float32Array(n * n * 2);
+  const indices = new Uint16Array((n - 1) * (n - 1) * 6);
+  for (let j = 0; j < n; j++) {
+    for (let i = 0; i < n; i++) {
+      const k = j * n + i;
+      positions[3 * k] = (i - c) * stepKm;           // east
+      positions[3 * k + 1] = t.heights[k] / 1000;    // up, true scale
+      positions[3 * k + 2] = (j - c) * stepKm;       // south (row 0 = north edge)
+      uvs[2 * k] = i / (n - 1);
+      uvs[2 * k + 1] = 1 - j / (n - 1);
+    }
+  }
+  let q = 0;
+  for (let j = 0; j < n - 1; j++) {
+    for (let i = 0; i < n - 1; i++) {
+      const a = j * n + i, b = a + 1, d = a + n, e = d + 1;
+      indices.set([a, d, b, b, d, e], q);
+      q += 6;
+    }
+  }
+  return {
+    positions, uvs, indices, normals: undefined,
+    elevations: t.heights, minElevation: t.groundElevationM + t.minM, maxElevation: t.groundElevationM + t.maxM,
+    elevationRange: t.maxM - t.minM, centerElevation: t.groundElevationM,
+    widthKm: (n - 1) * stepKm, resolution: n - 1, isHighResLOLA: true,
+    datasetName: 'NASA LOLA LDEM 80 m (ASTRA-SN engine tile)',
+  };
+}
+
+/** Direction of the local Sun from the engine azimuth / elevation (x = east, y = up, z = south). */
+function sunLightPosition(sun: { azimuthDeg: number; elevationDeg: number }, r = 23): [number, number, number] {
+  const az = (sun.azimuthDeg * Math.PI) / 180, el = (sun.elevationDeg * Math.PI) / 180;
+  return [r * Math.cos(el) * Math.sin(az), r * Math.sin(el), -r * Math.cos(el) * Math.cos(az)];
+}
+
 export interface NasaMoonGlobeProps {
   mode: 'orbital' | 'surface';
   /** UTC date of the Sun position used for the lighting (orbital view). */
   sunDate?: string;
+  /** Engine Sun azimuth / elevation at the site (direction of the local terrain light). */
+  localSun?: { azimuthDeg: number; elevationDeg: number } | null;
   selectedSite?: LunarSite | null;
   activeSite?: LunarSite | null;
   onActiveSiteScreenPos?: (data: SiteScreenProjectorData | null) => void;
@@ -687,6 +731,7 @@ export interface NasaMoonGlobeProps {
 export default function NasaMoonGlobe({
   mode,
   sunDate,
+  localSun,
   selectedSite,
   activeSite,
   onActiveSiteScreenPos,
@@ -774,9 +819,16 @@ export default function NasaMoonGlobe({
     const elev = lunarTerrainService.getElevation(selectedSite.lat, selectedSite.lon);
     onElevationChange?.(elev);
 
-    // Generate local 3D terrain grid (~40km span, 128x128 grid from NASA LOLA DEM)
-    const local = lunarTerrainService.generateLocalTerrain(selectedSite, 40, 40, 128);
-    setTerrainData(local);
+    // Local 3D terrain: real LOLA 80 m heights from the engine tile when the site has one,
+    // else the previous grid (~40 km span, 128x128 from the global LOLA map)
+    let cancelled = false;
+    loadTerrainTile(selectedSite.id).then((tile) => {
+      if (cancelled) return;
+      setTerrainData(tile ? tileToTerrainData(tile) : lunarTerrainService.generateLocalTerrain(selectedSite, 40, 40, 128));
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [selectedSite, onElevationChange]);
 
   // Compute displacement bias based on dataset range
@@ -796,13 +848,17 @@ export default function NasaMoonGlobe({
       {/* Cinematic Deep Space Solar Illumination (grazing angle in surface mode for authentic crater shadow relief) */}
       {mode === 'surface' ? (
         <directionalLight
-          position={[18, 5, 14]}
-          intensity={3.8}
+          position={localSun ? sunLightPosition(localSun) : [18, 5, 14]}
+          intensity={localSun && localSun.elevationDeg < 0 ? 0 : 3.8}
           color="#FFFFFF"
           castShadow
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
           shadow-bias={-0.0001}
+          shadow-camera-left={-12}
+          shadow-camera-right={12}
+          shadow-camera-top={12}
+          shadow-camera-bottom={-12}
         />
       ) : (
         <RealSunLight date={sunDate} moonGroupRef={moonGroupRef} />

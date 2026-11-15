@@ -333,6 +333,7 @@ function MoonVisualizationFocus() {
             <Stars radius={80} depth={50} count={3500} factor={4} saturation={0} fade speed={0.2} />
             <NasaMoonGlobe
               mode="surface"
+              localSun={skyline ? { azimuthDeg: currentPoint.sunAzimuthDeg, elevationDeg: currentPoint.sunElevationDeg } : null}
               selectedSite={selectedSite}
               onSelectSite={handleExploreSite}
               autoRotate={false}
@@ -426,6 +427,13 @@ function MoonVisualizationFocus() {
             onOpenConfigure={() => setIsConfigureOpen(true)}
             onOpenCompare={() => setIsCompareOpen(true)}
           />
+
+          {/* Local terrain: data note (shadows in this view come from the 20 km LOLA tile only) */}
+          {activeMode === 'terrain' && skyline && (
+            <div className="fixed bottom-[132px] left-1/2 -translate-x-1/2 z-30 px-3 py-1 rounded-lg bg-[#04060B]/80 border border-white/15 text-[10px] font-mono text-white/70 pointer-events-none whitespace-nowrap">
+              NASA LOLA 80 m terrain (20 km) · Shadows from terrain beyond 10 km not shown — see telemetry for the true Sun state
+            </div>
+          )}
 
           {/* Restored Miniature 3D Square Viewport Switchers (Bottom-Left) */}
           <MiniThumbnailPreviews

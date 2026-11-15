@@ -72,6 +72,7 @@ Generated with `backend/scripts/precompute.py`. About 1.4 MB per site (about 0.3
 | `index.json` | `startUtc`, `endUtc`, `stepMinutes`, `sensorHeightM`, `terrainSource`, `sites` (same list as `sites.json`) |
 | `result_<siteId>.json` | same format as `result_<siteId>.json` above, for the whole year |
 | `horizon_<siteId>.json` | same format as `horizon_<siteId>.json` above |
+| `terrain_<siteId>.bin` / `.json` | 20 km x 20 km LOLA 80 m terrain around the 4 featured sites (float32, metres relative to the site ground, curvature included, row 0 = north, col 0 = west) for the 3D local terrain view |
 | `subsolar.json` | hourly sub-solar point (`latDeg`, `lonDeg`, Moon-fixed frame) from `startUtc`; real Sun direction for the 3D globe (`backend/scripts/export_subsolar.py`) |
 
 **Showing a shorter period** (the user picks a start date and a duration inside the year) — cut it out of
